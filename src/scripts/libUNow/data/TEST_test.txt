@@ -1,0 +1,7 @@
+!topa,void
+!anno,Alt,on,45,RSSI,off,15,Ccon,on,222,Dist,off,180,VFAS,on,306
+EMPTY
+!tel1,void
+!tele,void
+EMPTY
+EMPTY
