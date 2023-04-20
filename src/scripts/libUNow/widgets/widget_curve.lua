@@ -153,19 +153,64 @@ end
 
 
 -- --------------------------------------
---      get point selector value
+--      get point selector value (via momentary / LSW)
 -- --------------------------------------
 local function  getSelectorVal(switch,mode)
+	print("got mode",switch,mode)
 	local newValue
-	if mode == MODE_MOMENTARY then
+	if 		mode == MODE_MOMENTARY then
 		newValue  = getSwitch(switch)
+--	elseif	mode == MODE_TRIM then								-- needs separate function
+--		newValue  = getTrim(switch)
 	else
 		newValue  = getLSwitch(switch)
 	end
+	print("switchValue ",newvalue)
 	return newValue
 end
 
 
+-- --------------------------------------
+--      get point selector value (trim)
+-- --------------------------------------
+
+local function  getTrim_Val(switch)
+		--print("178 enter getTrimval",switch)
+		if switch == trimA then
+			member1 =  8				-- trim5 left
+			member2 =  9				-- trim5
+		else
+			member1 = 10				-- trim6 left
+			member2 = 11	
+		end
+	
+		local srcLeft  = system.getSource({category = CATEGORY_TRIM_POSITION, member = member1})
+		local srcRight = system.getSource({category = CATEGORY_TRIM_POSITION, member = member2})
+		
+		--local valLeft  = srcLeft:value() > 0
+		--local valRight = srcRight:value() > 0
+		
+		local valLeft  = srcLeft:value()
+		local valRight = srcRight:value()
+--[[			
+		-- sim "substitude" switch SB:
+		local srcLeft  = system.getSource({category = CATEGORY_SWITCH, name = "SB"})
+		local srcRight = system.getSource({category = CATEGORY_SWITCH, name = "SB"})
+		
+
+		local valLeft  = srcLeft:value()
+		local valRight = 0
+	
+		if valLeft < 0 then
+			valLeft = 0
+			valRight = 1024
+		end
+		-- end subtsitution
+--]]			
+--		local valRight = srcRight:value()
+		print("upload a,b",valLeft,valRight)
+		return valLeft,valRight
+end
 
 -- --------------------------------------
 -- get potvalue (relative, max = 100%, considers deadzone)
@@ -423,7 +468,38 @@ end
 -- ***********************************************
 local function checkSaveVal(switch,mode)
 
-	switchValue  = getSelectorVal(switch,mode)
+	local switchValue = 0
+	
+	if selMode == MODE_MOMENTARY then
+		switchValue = getSelectorVal(switch,mode)
+		
+	elseif selMode == MODE_TRIM then
+--[[
+		if switch == trimA then
+			member1 =  8				-- trim5 left
+			member2 =  9				-- trim5
+		else
+			member1 = 10				-- trim6 left
+			member2 = 11	
+		end
+		
+		local srcLeft  = system.getSource({category = CATEGORY_TRIM_POSITION, member = member1})
+		local srcRight = system.getSource({category = CATEGORY_TRIM_POSITION, member = member2})
+		
+		local valLeft  = srcLeft:value() > 0
+		local valRight = srcRight:value() > 0
+--]]		
+--[[
+		-- sim "substitude" switch SB:
+		local srcLeft  = system.getSource({category = CATEGORY_SWITCH, name = "SB"})
+		local srcRight = system.getSource({category = CATEGORY_SWITCH, name = "SB"})
+		
+		local valLeft  = srcLeft:value()
+		local valRight = srcRight:value()	
+--]]
+		local valLeft,valRight = getTrim_Val(switch)
+		switchValue  = valLeft + valRight
+	end	
 
 	if var.itmHandle == CHANGING then
 		-- switch was pressed >> flag "save pending"
@@ -433,7 +509,8 @@ local function checkSaveVal(switch,mode)
 			end
 			
 		-- switch was released & flag "save pending" >> "save" value		
-		elseif var.itmSwTime > 0 and switchValue < 0 then	
+		elseif var.itmSwTime > 0 and switchValue <= 0 then	
+		print("save detected")
 			handleSaveValue()
 		end
 	end
@@ -485,6 +562,78 @@ local function momentHandling(switch,Numitems,var,selMode)
 
 end
 	
+-- ***********************************************
+--    routine for Trims
+-- ***********************************************	
+local function trimHandling(switch,Numitems,var,selMode)
+--[[
+local function trimHandling(member1,member2,Numitems,var,selMode)
+		
+		local srcLeft  = system.getSource({category = CATEGORY_TRIM_POSITION, member = member1})
+		local srcRight = system.getSource({category = CATEGORY_TRIM_POSITION, member = member2})
+		
+		local valLeft  = srcLeft:value() > 0
+		local valRight = srcRight:value() > 0
+--]]	
+--[[	
+		-- sim "substitude" switch SB:
+		local srcLeft  = system.getSource({category = CATEGORY_SWITCH, name = "SB"})
+		local srcRight = system.getSource({category = CATEGORY_SWITCH, name = "SB"})
+		
+		local valLeft  = srcLeft:value() < 0
+		local valRight = srcRight:value() > 0		
+--]]			
+		local valLeft,valRight = getTrim_Val(switch)
+		
+		newValue  = valLeft > 0 or valRight > 0															-- determine if trim is pressed
+		print("514 trimhandling handle 0=idle, 1=changing, 2=saved", var.itmHandle)
+		
+		if newValue and  var.itmSwTime == 0 then													-- trim is nitially pressed, further investigation:
+			if valLeft>0 then 
+				var.itmTrimDir = LEFT															-- determine trim position left/right
+			else
+				var.itmTrimDir = RIGHT
+			end
+			
+	--		if var.itmSwTime == 0 then															-- start time measurement	
+				var.itmSwTime = getTime()
+	--		end
+
+		elseif var.itmSwTime > 0 and var.itmHandle == IDLE then									-- trim was pressed & released & in "idle" mode (pod neutral):  so choose new item (new point)										-- switch released, value saved before >> select new item 																	-- momentary procedure
+			--local duration = getTime() - var.itmSwTime
+			var.itmSwTime 		= 0																-- reset time "counter"
+			if var.itmTrimDir == RIGHT then														-- "right" pressed >> next point
+				if var.itmActual == Numitems-1 then
+					var.itmActual=0
+				else												
+					var.itmActual= var.itmActual+1												-- increment
+				end
+			else																				-- "LEFT" pressed >> prev. point
+				if var.itmActual == 0 then
+					var.itmActual =Numitems-1
+				else												
+					var.itmActual = var.itmActual-1												-- decrement
+				end
+			end
+			cvVar.snd = armAnnouncent(sound.pnt[var.itmActual+1])								-- "preload" call out
+			storeOldValue()																		-- remember "original" value as base point
+			var.itmTrimDir = NEUTRAL															-- reset handler
+			
+		elseif var.itmSwTime > 0 and var.itmHandle == SAVED then								-- switch released & in "saved" mode:  USER ERROR! Pot was not reset to neutral, so no action !
+			var.itmSwTime 		= 0
+			playWav(sound.pod2zero)
+			playSignal(2000,100)
+			var.itmTrimDir = NEUTRAL															-- reset handler
+		end				
+--[[		
+--]]
+
+
+
+
+end	
+	
+	
 	
 	
 	
@@ -514,69 +663,19 @@ local function itmSelect(switch,Numitems,var,selMode)
 	--   *******              Trims                 ****	
 	--   ***********************************************			
 	
-	elseif isTrim
-		if switch== trimA then
-			member1 =  9				-- trim5 left
-			member2 = 10				-- trim5
+	elseif selMode == MODE_TRIM then
+	--[[ñ
+		if switch == trimA then
+			member1 =  8				-- trim5 left
+			member2 =  9				-- trim5
 		else
-			member1 = 11				-- trim6 left
-			member2 = 12	
+			member1 = 10				-- trim6 left
+			member2 = 11	
 		end
-		
-		local srcLeft  = system.getSource({category = CATEGORY_TRIM_POSITION, member = member1})
-		local srcRight = system.getSource({category = CATEGORY_TRIM_POSITION, member = member2})
-		
-		local valLeft  = srcLeft:value()
-		local valRight = srcRight:value()
-	
-
-		newValue  = math.max(valLeft,valRight)
-		
-		if newValue > 0 then																	-- switch is activated
-			if valLeft > 0 then 
-				var.itmTrimDir = LEFT															-- determine trim position
-			else
-				var.itmTrimDir = RIGHT
-			end
 			
-			if var.itmSwTime == 0 then															-- start time measurement	
-				var.itmSwTime = getTime()
-			end
-
-		elseif var.itmSwTime > 0 and var.itmHandle == IDLE then									-- switch released & in "idle" mode:  so choose new item (new point)										-- switch released, value saved before >> select new item 																	-- momentary procedure
-			local duration = getTime() - var.itmSwTime
-			var.itmSwTime 		= 0		
-			if var.itmTrimDir == RIGHT then														-- "right" pressed >> next point
-				if var.itmActual == Numitems-1 then
-					var.itmActual=0
-				else												
-					var.itmActual= var.itmActual+1												-- increment
-				end
-			else																				-- "LEFT" pressed >> prev. point
-				if var.itmActual == 0 then
-					var.itmActual =Numitems-1
-				else												
-					var.itmActual = var.itmActual-1												-- decrement
-				end
-			end
-			cvVar.snd = armAnnouncent(sound.pnt[var.itmActual+1])								-- "preload" call out
-			storeOldValue()																		-- remember "original" value as base point
-			var.itmTrimDir = NEUTRAL															-- reset handler
-			
-		elseif var.itmSwTime > 0 and var.itmHandle == SAVED then								-- switch released & in "saved" mode:  USER ERROR! Pot was not reset to neutral, so no action !
-			var.itmSwTime 		= 0
-			playWav(sound.pod2zero)
-			playSignal(2000,100)
-			var.itmTrimDir = NEUTRAL															-- reset handler
-		end				
---[[		
---]]
-	
-	--   ****************************		
-	--   *******     LSW       ****	
-	--   ****************************	
---	else
---		momentHandling(switch,Numitems,var,selMode)
+		trimHandling(member1,member2,Numitems,var,selMode)
+-- ]]
+		trimHandling(switch,Numitems,var,selMode)
 	
 	end
 
@@ -592,7 +691,7 @@ end
 -- determine mode
 ---------------	
 local function itmCheckActive(Pot,isNeutral)
-	if var.itmHandle==SAVED and isNeutral then												-- changed from saved to ready
+	if var.itmHandle == SAVED and isNeutral then												-- changed from saved to ready
 		playWav(sound.go)
 		return IDLE
 	elseif  var.itmHandle==IDLE  and not(isNeutral) then									-- change from idle to tuning
@@ -698,16 +797,17 @@ function setCurve(frameX,page,layout,theme,touch,evnt,subConf,appConfigured,txt,
 
 	crv = model.getCurve(cvVar.targetCurve)
 	
-	print("699 switch det:",cvVar.ptSelector)
+	-- print("714 trimmer:",cvVar.trimPot)
+	-- print("715 switch det:",cvVar.ptSelector)
 	if cvVar.ptSelector=="SH"  or cvVar.ptSelector=="SI" or cvVar.ptSelector=="SJ" then	--determn selector mode
 		cvVar.selMode = MODE_MOMENTARY
-	elseif cvVar.ptSelector==trimA or switch==cvVar.ptSelector then
+	elseif cvVar.ptSelector=="T5" or cvVar.ptSelector=="T6" then
 		cvVar.selMode = MODE_TRIM
 	else
 		cvVar.selMode = MODE_LSW
 	end
 
-	print("735 determine ",cvVar.selMode)
+	-- print("725 determine ",cvVar.selMode)
 												-- one time config; cant be executed during create cause window size not availabe then
 	if not(appConfigured) then	
 		-- ***************************    "init"       *********************************************************
@@ -790,7 +890,7 @@ function setCurve(frameX,page,layout,theme,touch,evnt,subConf,appConfigured,txt,
 		if var.itmHandle == CHANGING then												-- when in changing mode: new curve points
 			local cvX,cvY 	= crv:point(var.itmActual)									-- get old "generic" X/Y values
 			local cvYnew 	= 0.35*Cv.PotVal	+ var.itmOldVal							-- change Y to new value, for safety reasons: 35% range as limit ;  cvVar.chngePntVal = value at start of tuning !
-			print("newval",var.itmOldVal	,cvYnew)
+			print("845 newval",var.itmOldVal	,cvYnew)
 			cvYnew = checklimits(cvYnew,(-100),(100))
 			crv:point(var.itmActual,cvX,cvYnew)											-- save new value
 		end

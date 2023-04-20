@@ -128,7 +128,7 @@ function getSubForm(index,txt,lang)
 		subFrm= {
 			{txt.conf[1][lang], 	"createCurveChoice",		nil,	1,	 	{{dummy,1},{dummy,2}},	default="C1"	},	
 			{txt.conf[2][lang], 	"createSourceField",		nil,	1,	 	{{dummy,1},{dummy,2}},	default=60	},
-			{txt.conf[3][lang],		"createChoiceField",		nil,	1,	 	{{"Pot1",1},{"Pot2",2},{"Slider Left",3},{"Slider Right",4}}	,default=1	},	
+			{txt.conf[3][lang],		"createChoiceField",		nil,	1,	 	{{"Pot1",1},{"Pot2",2},{"Pot3",3},{"Pot4",4},{"Slider Left",5},{"Slider Right",6}}	,default=1	},	
 			{txt.conf[4][lang],		"createChoiceField",		nil,	1,		{{"SH",1},{"SI",2},{"SJ",3},{"Trim5",4},{"Trim6",5}}			,default=1		},
 			{txt.conf[5][lang],		"createSwitchField",		nil,	1,	 										}	
 

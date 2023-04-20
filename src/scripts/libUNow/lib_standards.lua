@@ -62,6 +62,28 @@ function getchannel(object)
 	return (value)
 end
 
+function getTrim(object)
+	local value = 0
+	local lookUpT = {
+					Ele	= 0,
+					Rud	= 2,
+					Thr	= 4,
+					Ail	= 6,
+					T5	= 8,
+					T6	=10	
+					}
+	local member1 = lookUpT[object]
+	local member2 = member1+1
+	local inputSrc1 =  system.getSource({category=CATEGORY_CHANNEL, member = member1}):value()	-- get Trim Pos1
+	local inputSrc2 =  system.getSource({category=CATEGORY_CHANNEL, member = member2}):value()	-- get Trim Pos1
+	
+	if (inputSrc1+inputSrc1) > 0 then 
+		value = 1
+	end
+
+	return (value)
+end
+
 
 function getchannelPerc(object)
 	local inputSrc =  system.getSource({category=CATEGORY_CHANNEL, name=object})	-- get channel value in percent (base1024)
