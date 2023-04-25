@@ -40,7 +40,7 @@
 -- announce            520          540                   ??? under construction
 -- teleEl	                                                ??? under construction
 -- picture	                   not used
--- setCurve                  not used
+-- setCurve                  	not used
 -- **************************************************************************************************
 
 
@@ -51,30 +51,42 @@
 -- **************************************************************************************
 
 
-local IDLE <const> 		= 0										-- some handler
-local CHANGING <const> 	= 1
-local SAVED <const> 	= 2
+local IDLE <const> 				= 0								-- some handler
+local CHANGING <const> 			= 1
+local SAVED <const> 			= 2
 
-local BOLD <const> 		= 2
-local BOLDX <const> 	= 3
-local BOLDXX <const> 	= 5
+local BOLD <const> 				= 2
+local BOLDX <const> 			= 3
+local BOLDXX <const> 			= 5
 
-local PLAYNUM <const> 	= false									-- announce y Value of selected point
-local CRVyOffset <const> 	= 10
+local PLAYNUM <const> 			= false							-- announce y Value of selected point
+local CRVyOffset <const> 		= 10
 
-local nextSound 			= 0									-- timestamp to play sound 
-																-- last known stae of trim pot true: pot = neutral, 
+local nextSound 				= 0								-- timestamp to play sound 
+																
 
 																
-local LEFT <const> 			= 1				-- trim position
-local RIGHT <const>			= 2				-- trim position
-local NEUTRAL <const>		= 0				-- trim position
+local LEFT <const> 				= 1								-- trim position
+local RIGHT <const>				= 2								-- trim position
+local NEUTRAL <const>			= 0								-- trim position
 																
 																
-local MODE_MOMENTARY <const> 	= 0			-- pt selector "momentary"
-local MODE_TRIM <const>			= 1			-- ..via "Trim"
-local MODE_LSW <const>			= 2			-- .. via "LSW"
-																
+local MODE_MOMENTARY <const> 	= 0								-- pt selector "momentary"
+local MODE_TRIM <const>			= 1								-- .. via "Trim"
+local MODE_LSW <const>			= 2								-- .. via "LSW"
+
+
+-- these constants can be customized by user preferences
+local DELAY_PNT <const>			= 0.8							-- delay ouf point announcement after new one was selected (prevent "announcement stakkato" in case you browse through several points)
+ 
+local MARK_OUTER <const>		= 19							-- definition of marker range (optical / audio "feedback") >>  percent values	
+local MARK_INNER <const>		= 14
+local MARK_HIT <const>			= 08
+
+local SIM_TRIM					= true							-- simulate Trims by switches (used in sim on PC)
+	
+
+	
 -- *******************************************************
 --            declare "global" widget variables once 
 -- *******************************************************
@@ -175,41 +187,46 @@ end
 -- --------------------------------------
 
 local function  getTrim_Val(switch)
-		--print("178 enter getTrimval",switch)
-		if switch == trimA then
-			member1 =  8				-- trim5 left
-			member2 =  9				-- trim5
-		else
-			member1 = 10				-- trim6 left
-			member2 = 11	
-		end
-	
-		local srcLeft  = system.getSource({category = CATEGORY_TRIM_POSITION, member = member1})
-		local srcRight = system.getSource({category = CATEGORY_TRIM_POSITION, member = member2})
-		
-		--local valLeft  = srcLeft:value() > 0
-		--local valRight = srcRight:value() > 0
-		
-		local valLeft  = srcLeft:value()
-		local valRight = srcRight:value()
---[[			
-		-- sim "substitude" switch SB:
-		local srcLeft  = system.getSource({category = CATEGORY_SWITCH, name = "SB"})
-		local srcRight = system.getSource({category = CATEGORY_SWITCH, name = "SB"})
-		
+	--print("178 enter getTrimval",switch)
+	local valLeft
+	local valRight
+			
+	if SIM_TRIM then
+			-- sim "substitude" switch SC/SB:
+			local srcLeft  = system.getSource({category = CATEGORY_SWITCH, name = "SC"})
+			local srcRight = system.getSource({category = CATEGORY_SWITCH, name = "SB"})
+			
 
-		local valLeft  = srcLeft:value()
-		local valRight = 0
-	
-		if valLeft < 0 then
-			valLeft = 0
-			valRight = 1024
-		end
-		-- end subtsitution
---]]			
---		local valRight = srcRight:value()
-		print("upload a,b",valLeft,valRight)
-		return valLeft,valRight
+			valLeft  = srcLeft:value()
+			valRight = srcRight:value()
+		
+			if valLeft ~= 0 then
+				valLeft = 1024				-- sim trim left
+				valRight = 0
+			elseif valRight ~= 0 then
+				valRight = 1024			-- sim trim right
+				valLeft = 0
+			end		
+	else
+			if switch == trimA then
+				member1 =  8				-- trim5 left
+				member2 =  9				-- trim5
+			else
+				member1 = 10				-- trim6 left
+				member2 = 11	
+			end
+		
+			local srcLeft  = system.getSource({category = CATEGORY_TRIM_POSITION, member = member1})
+			local srcRight = system.getSource({category = CATEGORY_TRIM_POSITION, member = member2})
+			
+			--local valLeft  = srcLeft:value() > 0				-- in case app logic demands for boolean
+			--local valRight = srcRight:value() > 0
+			
+			valLeft  = srcLeft:value()
+			valRight = srcRight:value()
+	end
+	print("return trim val",valLeft,valRight)
+	return valLeft,valRight
 end
 
 -- --------------------------------------
@@ -423,6 +440,8 @@ local function playCurSignal(delta)
 	local time0 	= os.clock()
 	local tmeDelta 	= 0.1	
 	if time0 > nextSound then
+--[[
+		--    variant 1:	acoustic signal by entering outer marker
 		if delta == BOLDX or delta == BOLDXX then 						-- inner marker
 			playSignal(100,110)		
 			nextSound = time0 + tmeDelta
@@ -430,6 +449,18 @@ local function playCurSignal(delta)
 			playSignal(200,110)
 			nextSound = time0 + tmeDelta
 		end
+--]]
+--[[--]]
+		--    variant 2:	acoustic signal by entering inner marker
+		if delta == BOLDXX then 										-- hit marker
+			playSignal(100,110)		
+			nextSound = time0 + tmeDelta
+		elseif delta == BOLDX then										-- inner marker
+			playSignal(200,110)
+			nextSound = time0 + tmeDelta
+		end
+
+
 	end
 
 end
@@ -845,10 +876,10 @@ function setCurve(frameX,page,layout,theme,touch,evnt,subConf,appConfigured,txt,
 	Cv.PotVal,Cv.PotNeutral		= getPotVal(cvVar.trimPot)							-- get value & status of Pot
 	
 	
-	Cv["marker"] = {}																-- definition of market (optical / audio "feedback") >>  percent values														
-		Cv.marker.outer		= 19															-- "wide"
-		Cv.marker.inner 	= 14															-- "narrow"
-		Cv.marker.hit		= 08															-- "hit curve point"
+	Cv["marker"] = {}																-- definition of marker (optical / audio "feedback") >>  percent values														
+		Cv.marker.outer		= MARK_OUTER													-- "wide"
+		Cv.marker.inner 	= MARK_INNER													-- "narrow"
+		Cv.marker.hit		= MARK_HIT														-- "hit curve point"
 
 	
 
@@ -861,8 +892,8 @@ function setCurve(frameX,page,layout,theme,touch,evnt,subConf,appConfigured,txt,
 -- ***************************    some checks on start   (user activities )   ******************************************
 	
 	if cvVar.snd.checkAnn then														-- announcement imminent, check if it should be triggered
-		print("testann")
-		if getTime() - cvVar.snd.preLoadTime > 1 then								-- wait some time, so "browsing" doesn't sound repeats
+		--print("testann")
+		if getTime() - cvVar.snd.preLoadTime > DELAY_PNT then								-- wait some time, so "browsing" doesn't sound repeats
 			playWav(cvVar.snd.wav)
 			cvVar.snd = resetPntAnn()												-- reset ann
 		end	
@@ -890,7 +921,7 @@ function setCurve(frameX,page,layout,theme,touch,evnt,subConf,appConfigured,txt,
 		if var.itmHandle == CHANGING then												-- when in changing mode: new curve points
 			local cvX,cvY 	= crv:point(var.itmActual)									-- get old "generic" X/Y values
 			local cvYnew 	= 0.35*Cv.PotVal	+ var.itmOldVal							-- change Y to new value, for safety reasons: 35% range as limit ;  cvVar.chngePntVal = value at start of tuning !
-			print("845 newval",var.itmOldVal	,cvYnew)
+			--print("845 newval",var.itmOldVal	,cvYnew)
 			cvYnew = checklimits(cvYnew,(-100),(100))
 			crv:point(var.itmActual,cvX,cvYnew)											-- save new value
 		end
