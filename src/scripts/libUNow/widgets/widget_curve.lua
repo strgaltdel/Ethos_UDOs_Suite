@@ -45,6 +45,16 @@
 
 
 
+-- these constants can be customized by user preferences
+local SIM_TRIM					= true							-- simulate Trims by switches (used in sim on PC)
+
+local DELAY_PNT <const>			= 0.8							-- delay ouf point announcement after new one was selected (prevent "announcement stakkato" in case you browse through several points)
+ 
+local MARK_OUTER <const>		= 19							-- definition of marker range (optical / audio "feedback") >>  percent values	
+local MARK_INNER <const>		= 14
+local MARK_HIT <const>			= 08
+
+
 
 -- **************************************************************************************
 -- *************************    unspecific Tele draw functions **************************
@@ -76,14 +86,6 @@ local MODE_TRIM <const>			= 1								-- .. via "Trim"
 local MODE_LSW <const>			= 2								-- .. via "LSW"
 
 
--- these constants can be customized by user preferences
-local DELAY_PNT <const>			= 0.8							-- delay ouf point announcement after new one was selected (prevent "announcement stakkato" in case you browse through several points)
- 
-local MARK_OUTER <const>		= 19							-- definition of marker range (optical / audio "feedback") >>  percent values	
-local MARK_INNER <const>		= 14
-local MARK_HIT <const>			= 08
-
-local SIM_TRIM					= true							-- simulate Trims by switches (used in sim on PC)
 	
 
 	
