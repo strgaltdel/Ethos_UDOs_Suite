@@ -118,7 +118,7 @@ local vars  =  {}												-- hosts vars which (and depending function coding)
 
 local var 	=  {}												-- hosts data from actual selected GVar
 																-- start conditions:  GVar_frontendConfigure()
-
+local bmp =lcd.loadBitmap("/scripts/libUNow/bmp/gvar/ail_dif.png")
 
 		
 local pre <const> = "/scripts/libUNow/audio/de/"				-- sounds for widget
@@ -143,11 +143,11 @@ local function gvarData(dataSet)
 	-- set standard
 	data[1] = {
 		{"Differenzierung",			"Diff"			,"diff.wav"},
-		{"Höhentrim Wölbkl",		"Cmb 2 Ele"		,"mot2ele.wav"},		
+		{"Höhentrim Wölb.",		"Cmb 2 Ele"		,"mot2ele.wav"},		
 		{"Höhentrim ButFl.",		"BFl 2 Ele"		,"bfl2ele.wav"},
 		{"Höhentrim Motor",			"Mot 2 Ele"		,"mot2ele.wav"},
-		{"Diff V Ltw",				"V Diff"		,"vdiff.wav"}		
---		{"Höhentrim Stoerkl",		"Brk 2 Ele"		,"brk2ele.wav"},
+		{"Diff V Ltw",				"V Diff"		,"vdiff.wav"},		
+		{"Höhentrim Stoer",		"Brk 2 Ele"		,"brk2ele.wav"},
 		}
 	
 	-- set extended 1
@@ -179,7 +179,7 @@ local function gvarData(dataSet)
 		{"Höhentrim ButFl.",		"BFl 2 Ele"		,"bfl2ele.wav"},
 		{"Höhentrim Motor",			"Mot 2 Ele"		,"mot2ele.wav"}
 		}
-		
+		print("return dataset",dataSet)
 	return data[dataSet]
 end
 
@@ -284,7 +284,7 @@ end
 --      get point selector value (via momentary / LSW)
 -- --------------------------------------
 local function  getSelectorVal(switch,mode)
-	print("got mode",switch,mode)
+--	print("got mode",switch,mode)
 	local newValue
 	if 		mode == MODE_MOMENTARY then
 		newValue  = getSwitch(switch)
@@ -293,7 +293,7 @@ local function  getSelectorVal(switch,mode)
 	else
 		newValue  = getLSwitch(switch)
 	end
-	print("switchValue ",newvalue)
+--	print("switchValue ",newvalue)
 	return newValue
 end
 
@@ -349,7 +349,7 @@ end
 -- get potvalue (relative, max = 100%, considers deadzone)
 -- --------------------------------------
 local function getPotVal(Pot)
-	print("getpotVal",Pot)
+--	print("getpotVal",Pot)
 	local deadzone = 4									-- deadzone in percent
 	local position = getAnalog(Pot)/10.24
 	if math.abs(position) < deadzone then 					
@@ -490,7 +490,7 @@ local function checkSaveVal(switch,mode)
 			
 		-- switch was released & flag "save pending" >> "save" value		
 		elseif var.itmSwTime > 0 and switchValue <= 0 then	
-		print("save detected")
+--		print("save detected")
 			handleSaveValue()
 		end
 	end
@@ -502,8 +502,12 @@ end
 -- ***********************************************
 --    standard routine for momentaries & LSW's
 -- ***********************************************	
-local function momentHandling(switch,Numitems,var,selMode)
 
+local function momentHandling(switch,Numitems,var,selMode)
+	-- these limits are used for indizes 1..max (other variation: 0..max-1)
+	local upperLimit  = Numitems
+	local bottomLimit = 1
+	 
 	local newValue  = getSelectorVal(switch,selMode)
 
 		if newValue > 0 then																	-- switch is activated
@@ -515,13 +519,13 @@ local function momentHandling(switch,Numitems,var,selMode)
 			local duration = getTime() - var.itmSwTime
 			var.itmSwTime 		= 0		
 			if duration <0.8 then																-- short press >> next point
-				if var.itmActual == Numitems then
+				if var.itmActual == upperLimit then
 					var.itmActual=1
 				else												
 					var.itmActual= var.itmActual+1												-- increment
 				end
 			else																				-- long press >> prev. point
-				if var.itmActual == 1 then
+				if var.itmActual == bottomLimit then
 					var.itmActual =Numitems
 				else												
 					var.itmActual = var.itmActual-1												-- decrement
@@ -566,7 +570,7 @@ local function trimHandling(member1,member2,Numitems,var,selMode)
 		local valLeft,valRight = getTrim_Val(switch)
 		
 		newValue  = valLeft > 0 or valRight > 0															-- determine if trim is pressed
-		print("514 trimhandling handle 0=idle, 1=changing, 2=saved", var.itmHandle)
+--		print("514 trimhandling handle 0=idle, 1=changing, 2=saved", var.itmHandle)
 		
 		if newValue and  var.itmSwTime == 0 then													-- trim is intially pressed, further investigation:
 			if valLeft>0 then 
@@ -629,12 +633,12 @@ local function itmSelect(switch,Numitems,var,selMode)
 	local member2
 
 	local newValue
-	print("611 selMode",selMode)
+--	print("611 selMode",selMode)
 	--   ***********************************************		
 	--   *******         momentaries                ****	
 	--   ***********************************************	
 	if selMode == MODE_MOMENTARY or selMode == MODE_LSW then	
-			print("508 enter mom")
+--			print("508 enter mom")
 			momentHandling(switch,Numitems,var,selMode)
 		
 --[[		
@@ -748,7 +752,7 @@ function GVar_frontendConfigure(widget,appTxt,GVset)
 	gvVar.numItems = #gvVar.array															-- number of items / GVars
 	
 	setValArray(1)																			-- start with parameters / values of first GVar
-	
+
 	--	widget.setGVar ={}
 	--widget.setGVar.txt = appTxt
 	
@@ -803,32 +807,42 @@ local function disp_GV(gvIndex,i,fontSize,rwHeight,act_row,widget,frm)
 	
 	lcd.drawText(X1, Y,gvlabel ,LEFT)						-- finally, we print
 	lcd.drawNumber(X2,Y, gvValue)
+	
+--	frame.drawImage(0,70,bmp,100,30,frm)
+	lcd.drawBitmap(0, 0.5*widget.h, bmp, 240, 0.5*widget.h)
 end
 
 local function drawGVblock(widget,frm)
+	local maxItems 		= 7				 					-- limit number of displays items
 
-	local numItems 		= math.max(7,gvVar.numItems)		-- limit number of displays items
 	local fontSize  	= txtSize.sml						-- select fontsize
 	local rowHeight 	= lookupRowHeight(2)				-- get disp dep. height per font
 	local rwHeight		= rowHeight[fontSize]				-- get height per line
-
+	
+	--								real number		limit to allowed maxItems
+	local numItems 		= math.min(gvVar.numItems,math.max(maxItems,gvVar.numItems))		-- determine number of displays items
 	-- disp GVAR & Value
 
-	local active_row = 4									-- which line should display active GV (revolver rotation)
+	local active_row = 3									-- which line should display active GV (revolver rotation)
 	local delta = var.itmActual - active_row				-- so eval delta to actual gv index
-	local start = 1
+	local startRow = active_row - math.floor(gvVar.numItems/2)	-- number of items dep. start line
+	if startRow < 1 then startRow =1 end
+	local endRow = startRow + numItems-1
+--	if numItems < gvVar.numItems then
+--		start = round(numItems/2,0)+1						-- if numItems < "maxItems" (7) >> recalc startindex
+--	end
 	
-	if numItems < gvVar.numItems then
-		start = round(numItems/2,0)+1						-- if numItems < "maxItems" (7) >> recalc startindex
-	end
-	
-	for i = start,numItems do
+--	print("GV Block: i, gvIndex, numItems","actGVAR  ".. var.itmActual)
+	for i = startRow,endRow do
 		gvIndex = i + delta
-		print("index",i,gvIndex,numItems)
-		if gvIndex<1 then
-			gvIndex = gvVar.numItems + gvIndex
-		end
 
+--		print("index pre",gvIndex)
+		if gvIndex < 1 then
+			gvIndex = gvVar.numItems + gvIndex
+		elseif gvIndex > gvVar.numItems then
+			gvIndex = gvIndex - gvVar.numItems
+		end
+--		print("index",i,gvIndex,numItems)
 		disp_GV(gvIndex,i,fontSize,rwHeight,active_row,widget,frm)
 	end
 
@@ -847,7 +861,7 @@ end
 
 -- function setCurve(frameX,page,layout,theme,touch,evnt,subConf,appConfigured,appTxt,widget)
 function main_gvar(frameX,page,layout,theme,touch,evnt,subConf,appConfigured,txt,widget)
-	lookupPot={								-- !!! analog input name; sequence / index MUST CORRESPOND TO FORM CHOICELIST // Config handler !!!!!  >> file suite_conf.lua
+	lookupPot={								-- !!! analog inputs; sequence / index MUST CORRESPOND TO FORM CHOICELIST // Config handler !!!!!  >> file suite_conf.lua
 		"Pot1",								-- could be done more elegant, but so we have a tiny/easy choice List
 		"Pot2",	
 --		"Pot3",	
@@ -871,10 +885,8 @@ function main_gvar(frameX,page,layout,theme,touch,evnt,subConf,appConfigured,txt
 		"LSW_curve"
 		}
 		
-	-- "migrate" passed config to local (only cause: better readable)
-	-- in future releases a plausibility check maybe a good idea
---	gvVar.targetCurve	= subConf[1]-1						-- curve
---	gvVar.input 		= subConf[2]						-- input
+
+
 	gvVar.trimPot		= lookupPot[subConf[2]]				-- trim 
 	gvVar.Selector		= lookupSel[subConf[3]]				-- item selector
 	gvVar.SW_restore	= subConf[4]						-- restore switch
@@ -891,7 +903,7 @@ function main_gvar(frameX,page,layout,theme,touch,evnt,subConf,appConfigured,txt
 	end
 
 	
-	print("821 determine selMode ",gvVar.selMode)
+--	print("821 determine selMode ",gvVar.selMode)
 	-- one time config; cant be executed during create cause window size not availabe then
 	if not(appConfigured) then	
 		-- ***************************    "init"       *********************************************************
@@ -918,7 +930,6 @@ function main_gvar(frameX,page,layout,theme,touch,evnt,subConf,appConfigured,txt
 
 --  ---------
 
---	local cv_X, cv_Y = crv:point(var.itmActual)										-- get actual XY coordinates of curve-point you want to trim	
 
 	local gv_VAR = getGVar(var.itmLabel)											-- get actal GV value
 	

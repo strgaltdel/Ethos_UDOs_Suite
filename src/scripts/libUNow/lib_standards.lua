@@ -40,7 +40,7 @@ function getValue(object)													-- get simple (telemetry) value
 end
 
 function getAnalog(object)													-- get value from analog Input
-	print("get analog",name)
+--	print("get analog",name)
 	local src  = system.getSource({category=CATEGORY_ANALOG, name=object})
 	local value = src:value()
 	return(value)
@@ -135,6 +135,14 @@ end
 function round(val,dec)			
   local mult = 10^(dec or 0)
   return math.floor(val * mult + 0.5) / mult
+end
+
+
+																			-- ************************************************
+																			-- ***		     integer value                 	*** 
+																			-- ************************************************		
+function int(val)			
+  return math.floor(val)
 end
 
 																			-- ************************************************
