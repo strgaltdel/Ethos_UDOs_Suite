@@ -4,11 +4,29 @@
 -- (3) extend "apps_template"  		;defApplist(), pairing choice list entry & index number
 -- (3) extend subFrm  				;getSubForm(), add index label like step (1) and create subform entries
 
-local NIL <const> 			= 1
-local PICTURE <const> 		= 2
-local CurveEDIT <const> 	= 3
-local ModelFINDER <const> 	= 4
-local Tele01 <const> 		= 5
+local NIL <const> 			=  1
+local PICTURE <const> 		=  2
+local CurveEDIT <const> 	=  3
+local ModelFINDER <const> 	=  4
+local Tele01 <const> 		=  5
+
+local w_TOPa <const> 		=  1			-- widget index, human readable format
+local w_ANNOUNCE <const>   	=  2
+local w_TELEEL <const>  	=  3
+local w_TELE01 <const>   	=  4
+local w_TELE2 <const>   	=  5
+local w_SETCURVE <const>	=  6
+local w_MODELFIND <const>	=  7
+local w_Picture <const>		=  8
+local w_GVAR <const>		=  9
+local w_TopFull <const>		= 30
+local w_TopStd <const>		= 31
+local w_TopLight <const>	= 32
+local w_DEMO <const>		= 97
+local w_EMPTY <const>   	= 98
+	
+
+
 
 
 function getWidgetPath()
@@ -28,20 +46,24 @@ end
 -- function tool1conf()
 function suite1conf()
 
-	local w_TOPa  			=  1			-- widget index, human readable format
-	local w_ANNOUNCE    	=  2
-	local w_TELEEL   		=  3
-	local w_TELE01   		=  4
-	local w_TELE2   		=  5
-	local w_SETCURVE		=  6
-	local w_MODELFIND		=  7
-	local w_Picture			=  8
-	local w_GVAR			=  9
+--[[
+	local w_TOPa  			= 1			-- human readable format
+	local w_ANNOUNCE    	= 2
+	local w_TELEEL   		= 3
+	local w_TELE01   		= 4
+	local w_TELE2   		= 5
+	local w_SETCURVE		= 6
+	local w_MODELFIND		= 7
+	local w_Picture			= 8
+	local w_GVAR			= 9
+--	local w_Top1			= 10		-- no subform
 	local w_TopFull			= 30
 	local w_TopStd			= 31
 	local w_TopLight		= 32
-	local w_DEMO			= 97
+	local w_DEMO   			= 97
 	local w_EMPTY   		= 98
+	
+]]	
 
 	local widgetPath <const>  		= "/scripts/libUNow/widgets/"
 -----------------------------------------
@@ -169,6 +191,7 @@ end
 function getSubForm(index,txt,lang)												-- only for apps, not used for topBars (no subform)
 --print("getsubform called",index,lang)
 --print("indizes:  2=pic  3=curve   4=mFind")
+--[[
 	local w_TOPa  			= 1			-- human readable format
 	local w_ANNOUNCE    	= 2
 	local w_TELEEL   		= 3
@@ -185,7 +208,7 @@ function getSubForm(index,txt,lang)												-- only for apps, not used for to
 	local w_DEMO   			= 97
 	local w_EMPTY   		= 98
 	
-	
+]]	
 	local subFrm= {}
 
 	if index ==w_Picture then
@@ -207,12 +230,12 @@ function getSubForm(index,txt,lang)												-- only for apps, not used for to
 			}
 	elseif index == w_MODELFIND then
 		subFrm= {	
-			{txt.conf[1][lang], 	"createBooleanField",	nil,	true	,default=true	},					-- testmode
+			{txt.conf[1][lang], 	"createBooleanField",		nil,	true	,default=true	},					-- testmode
 			}
 	elseif index == w_TELE01  then
 		subFrm= {	
-			{txt.conf[1][lang], 	"createBooleanField",	nil,	true	,default=true	},																					-- testmode
-			{txt.conf[2][lang],		"createChoiceField",	nil,	1,	 	{{"Neuron & oXs",1},{"YGE & oXs",2},{"oXs (GPS)",2},{"G-Rx",2},{"minimal",2}}	,default=1	},		-- choose Sensor set
+			{txt.conf[1][lang], 	"createBooleanField",		nil,	true	,default=true	},																					-- testmode
+			{txt.conf[2][lang],		"createChoiceField",		nil,	1,	 	{{"Neuron & oXs",1},{"YGE & oXs",2},{"oXs (GPS)",2},{"G-Rx",2},{"minimal",2}}	,default=1	},		-- choose Sensor set
 			}
 	elseif index == w_GVAR  then
 		subFrm= {	
@@ -224,13 +247,28 @@ function getSubForm(index,txt,lang)												-- only for apps, not used for to
 			}
 	elseif index == w_DEMO  then
 		subFrm= {	
-			{"Demo Test Bool", 		"createBooleanField",	nil,	true	,default=true	},																					-- testmode
-			{"Demo you've choice:",	"createChoiceField",	nil,	1,	 	{{"good",1},{"OK",2},{"very Good",3}}	,default=1	},												-- choice selection
+			{"Demo Test Bool", 		"createBooleanField",		nil,	true,												default=true	},																					-- testmode
+			{"Demo you've choice:",	"createChoiceField",		nil,	1,	 	{{"good",1},{"OK",2},{"very Good",3}},		default=1		},												-- choice selection
 			}
 	elseif index == w_TopFull  then
 		subFrm= {	
-			{"Top Test Bool", 		"createBooleanField",	nil,	true	,default=true	},																					-- testmode
-			{"Top Choice:",	"createChoiceField",	nil,	1,	 	{{"good",1},{"OK",2},{"very Good",3}}	,default=1	},												-- choice selection
+			{"Status1, LSW:", 								"createLswChoice",			nil,	1,		{{dummy,1},},								default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="flaperon"})	},																					-- testmode
+--			{"Status1, LSW:", 							"createSourceField",		nil,	1,		{{dummy,1},{dummy,2}},						default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="flaperon"})	},																					-- testmode
+			{"Status1, label",								"createTextField",			nil,	1,	 												default="flperon"	},											
+			{"Status2, LSW:", 								"createSourceField",		nil,	1,		{{dummy,1},},								default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="snapflp"})	},																						-- testmode
+			{"Status2, label",								"createTextField",			nil,	1,	 												default="snpflap"	},	
+			{"Motor Safety ..status \"safe\", LSW:",		"createLswChoice",			nil,	1,		{{dummy,1},},								default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="Safe Mstr"})	},																						-- testmode
+			{"               ..status \"pre-engaged\", LSW:","createLswChoice",			nil,	1,		{{dummy,1},},								default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="Mot Warning"})	},																						-- testmode
+			{"               ..status \"running\", LSW:",	"createLswChoice",			nil,	1,		{{dummy,1},},								default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="Motor running"})	},																						-- testmode
+			
+
+			}
+	elseif index == w_TopStd  then
+		subFrm= {	
+			{"TimerA select", 		 "createChoiceField",		nil,	1,	 	{{"Timer 1",1},{"Timer 2",2},{"Timer3",3}},	default=1			},																					-- testmode
+			{"TimerA, label (max 4Chars)","createTextField",			nil,	1,	 												default="Flgt"		},	
+			{"TimerB select", 		 "createChoiceField",		nil,	1,	 	{{"Timer 1",1},{"Timer 2",2},{"Timer3",3}},	default=2			},				
+			{"TimerB, label (max 4Chars)","createTextField",			nil,	1,	 												default="Mot"	},	
 			}
 	else
 		subFrm= {nil,"dummy",nil,nil,nil,nil}																																	-- no subforms

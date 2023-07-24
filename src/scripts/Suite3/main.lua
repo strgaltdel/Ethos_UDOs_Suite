@@ -627,6 +627,20 @@ local function createChoiceField(line, parameter)
 	return field
 end
 
+-- not ready yet
+local function createChoiceLSWField(line, parameter)
+   local field = form.addChoiceField(line, nil, parameter[5], 	function() 
+																-- get: convert lsw-uid(stored val) into entry of lsw-ChoiceList
+																	local value 	= getValue(parameter):member()
+																	return value
+																end, 
+																-- set: convert entry of lsw-ChoiceList into lsw-uid
+																function(lsw) 
+																	local value = system.getSource({category=CATEGORY_LOGIC_SWITCH, member=lsw})
+																	setValue(parameter, value) 
+																end)
+	return field
+end
 
 
 local function createChoiceAppField(line, parameter)
@@ -636,6 +650,11 @@ end
 
 local function createTextButton(line, parameter)
   local field = form.addTextButton(line, nil, parameter[4], function() return setValue(parameter,0) end)
+  return field
+end
+
+local function createTextField(line, parameter)
+  local field = form.addTextField(line, nil, function()   return getValue(parameter) end, function(newValue)   setValue(parameter, newValue) end)
   return field
 end
 
@@ -701,8 +720,8 @@ end
 -- ************************************************
 -- "helper" for "getCurves()" to sum up existent curves
 -- ************************************************
-local function crvExists(crv)
- if crv ~= nil then 
+local function entryExists(entry)
+ if entry ~= nil then 
 	return(true) 
  else
 	return(false)
@@ -720,10 +739,30 @@ local function getCurves()
 	local chArray = {}
 	for i=1,64 do												-- choice list must start using 1 !!
 		chArray[i]={}
-		local inputCrv =  model.getCurve(i-1)					-- try to get a curve
+		local input =  model.getCurve(i-1)					-- try to get a curve
 
-		if crvExists(inputCrv) then								-- successfull ?
-			chArray[i][1]=inputCrv:name()
+		if entryExists(input) then								-- successfull ?
+			chArray[i][1]=input:name()
+			chArray[i][2]=i										-- choice list must start using 1 !! >> in curve you will have to substract value by !
+		else
+		--print("nil",i)
+		end
+	end
+	return chArray
+end
+
+-- ************************************************
+-- create LSW choice list
+-- ************************************************
+local function getLSWs()
+	local index = 0
+	local chArray = {}
+	for i=1,100 do												-- choice list must start using 1 !!
+		chArray[i]={}
+		local input =  system.getSource({category=CATEGORY_LOGIC_SWITCH, member=i})				-- try to get a lsw
+
+		if entryExists(input) then								-- successfull ?
+			chArray[i][1]=input:name()							-- store name
 			chArray[i][2]=i										-- choice list must start using 1 !! >> in curve you will have to substract value by !
 		else
 		--print("nil",i)
@@ -743,16 +782,20 @@ local function migrateForm(formTbl)
 	
   local channelList={}
   local lookup ={
+	-- suite.conf		= translated into lua form.method
 	createNumberField 	= createNumberField	,
 	createTextButton 	= createTextButton	,
-	createBooleanField 	= createBooleanField	,
+	createBooleanField 	= createBooleanField,
 	createChoiceField 	= createChoiceField	,
 	createCurveChoice	= createChoiceField	,
 	createChannelChoice	= createChoiceField	,
+--	createLswChoice		= createChoiceField ,
+	createLswChoice		= createChoiceLSWField,
 	createSourceField	= createSourceField	,
 	createFilePicker	= createFilePicker ,
 	createSwitchField	= createSwitchField ,
-	createTextOnly 		= createTextOnly	
+	createTextOnly 		= createTextOnly,
+	createTextField		= createTextField,
 	}
 	
   local formArray = {}
@@ -768,6 +811,12 @@ local function migrateForm(formTbl)
 					formTbl[i][5] =getCurves()							-- "inject" actual curve list as choicelists
 					for x=1,#formTbl[i][5] do
 					end
+					
+				elseif  func == "createLswChoice" then
+					print("----------------    detected LSW choice")
+					formTbl[i][5] =getLSWs()							-- "inject" actual curve list as choicelists
+					for x=1,#formTbl[i][5] do
+					end				
 				end
 				formArray[i][j] = lookup[func]							-- conversion/mapping
 			else
