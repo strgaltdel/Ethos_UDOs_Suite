@@ -1,0 +1,27 @@
+<NotepadPlus>
+    <Session activeView="0">
+        <mainView activeIndex="3">
+            <File firstVisibleLine="410" xOffset="0" scrollWidth="2816" startPos="9133" endPos="9133" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\universal\main.lua" backupFilePath="" originalFileLastModifTimestamp="1660286371">
+                <Mark line="11" />
+            </File>
+            <File firstVisibleLine="70" xOffset="0" scrollWidth="2368" startPos="3807" endPos="3807" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\libUnow\widget_top1.lua" backupFilePath="" originalFileLastModifTimestamp="1660289264" />
+            <File firstVisibleLine="115" xOffset="0" scrollWidth="2086" startPos="2519" endPos="2519" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\libUnow\widget_teleElectro1.lua" backupFilePath="" originalFileLastModifTimestamp="1660038910" />
+            <File firstVisibleLine="104" xOffset="0" scrollWidth="2142" startPos="4436" endPos="4436" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\libUnow\lib_Topwidget.lua" backupFilePath="" originalFileLastModifTimestamp="1660287567" />
+            <File firstVisibleLine="5" xOffset="0" scrollWidth="2197" startPos="1723" endPos="1723" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\libUnow\lib_drawIcons.lua" backupFilePath="" originalFileLastModifTimestamp="1660128036" />
+            <File firstVisibleLine="0" xOffset="0" scrollWidth="1458" startPos="379" endPos="379" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\universal\lang.lua" backupFilePath="" originalFileLastModifTimestamp="1660288415" />
+        </mainView>
+        <subView activeIndex="4">
+            <File firstVisibleLine="0" xOffset="0" scrollWidth="1218" startPos="742" endPos="742" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\libUnow\conf_displaySets.lua" backupFilePath="" originalFileLastModifTimestamp="1660127725" />
+            <File firstVisibleLine="0" xOffset="0" scrollWidth="2688" startPos="1846" endPos="1846" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\libUnow\lib_relative_draw.lua" backupFilePath="" originalFileLastModifTimestamp="1660134990" />
+            <File firstVisibleLine="0" xOffset="0" scrollWidth="3038" startPos="549" endPos="541" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\libUnow\lib_getTele.lua" backupFilePath="" originalFileLastModifTimestamp="1660048457" />
+            <File firstVisibleLine="114" xOffset="0" scrollWidth="2086" startPos="2273" endPos="2273" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\libUnow\widget_teleElectro1.lua" backupFilePath="" originalFileLastModifTimestamp="1660038910" />
+            <File firstVisibleLine="45" xOffset="0" scrollWidth="2368" startPos="3520" endPos="3520" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\libUnow\widget_top1.lua" backupFilePath="" originalFileLastModifTimestamp="1660289264" />
+            <File firstVisibleLine="18" xOffset="0" scrollWidth="2142" startPos="1414" endPos="1334" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\libUnow\lib_Topwidget.lua" backupFilePath="" originalFileLastModifTimestamp="1660287567" />
+            <File firstVisibleLine="0" xOffset="0" scrollWidth="840" startPos="560" endPos="560" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\universal\theme.lua" backupFilePath="" originalFileLastModifTimestamp="1660138580" />
+            <File firstVisibleLine="78" xOffset="0" scrollWidth="2816" startPos="2363" endPos="2363" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\universal\main.lua" backupFilePath="" originalFileLastModifTimestamp="1660286371">
+                <Mark line="11" />
+            </File>
+            <File firstVisibleLine="69" xOffset="0" scrollWidth="2184" startPos="0" endPos="0" selMode="0" lang="Lua" encoding="-1" filename="D:\tmp_u\20 sdcard\x12 237.wrk\WIDGETS\TopMotor\main.lua" backupFilePath="" originalFileLastModifTimestamp="1588581532" />
+        </subView>
+    </Session>
+</NotepadPlus>

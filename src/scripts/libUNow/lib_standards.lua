@@ -40,7 +40,7 @@ function getValue(object)													-- get simple (telemetry) value
 end
 
 function getAnalog(object)													-- get value from analog Input
---	print("get analog",name)
+	--print("get analog",name)
 	local src  = system.getSource({category=CATEGORY_ANALOG, name=object})
 	local value = src:value()
 	return(value)
@@ -129,6 +129,27 @@ function getTime()
   return os.clock()		 
 end
 
+
+function timer2strg(val)
+	local hour 		= math.floor(val/3600)
+	local minute 	= math.floor((val -hour*3600)/60)
+	local second	= val-hour*3600-minute*60
+	local timerStrg  = string.format("%02d:%02d:%02d",hour,minute,second)				-- format decimals
+	return timerStrg
+end
+
+
+																			-- ************************************************
+																			-- ***    converts timer val into string        *** 
+																			-- ************************************************
+
+function timer2strgM(val)
+	local hour 		= math.floor(val/3600)
+	local minute 	= math.floor((val -hour*3600)/60)
+	local second	= val-hour*3600-minute*60
+	local timerStrg  = string.format("   %02d:%02d",minute,second)				-- format decimals
+	return timerStrg
+end
 																			-- ************************************************
 																			-- ***		     round value                 	*** 
 																			-- ************************************************		

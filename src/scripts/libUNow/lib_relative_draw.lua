@@ -173,7 +173,7 @@ function frame.drawBitmap(xRel,yRel,bitmap,wRel,hRel, frme)
 	local wid  = math.floor(wRel/100*frme.w)			-- prevent calc failure in ethos
 	local heig = math.floor(hRel/100*frme.h)
 	lcd.drawBitmap(xx, yy, bitmap, wid, heig)
-	--print("DRAW REL BMP ",xx,yy,wid,heig)
+--	print("DRAW REL BMP ",xx,yy,wid,heig)
 --	print("DRAW REL BMP ",wid,heig)
 end
 

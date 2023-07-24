@@ -1,5 +1,85 @@
---  Udos Ethos Suite "A"
---  Rev 1.1
+
+-- NEXT STEP:
+
+-- curve
+	--trim support
+	--100% limit
+	
+	--modelfind
+	--green button
+	
+
+	
+	
+-- App OFFset as para for subApps
+-- disclaimer
+-- new lib versioning
+-- clean up setcurve & modelfind 
+-- standard nomenclatur Paint call Apps
+		
+		
+		
+-- NextGen
+
+--	multi pics (app01 & 03) needs dedicated app conf storage
+
+
+
+
+-- OK:
+
+
+-- bugs config
+
+	-- 1 >> modelfind
+	-- 2 >> picture & define pics
+	-- 3 >> as soon curve >> pic def disapperar!!
+	--	!!! 663 appIndex imme rnur von line der 1. Änerung !!!
+	
+	
+	-- changeing several appSelector
+		-- >> subforms messed up
+
+	-- start mit 1>pic sonst nix
+	--  change 1  auf Mfind
+	--  914 "TOP! " not callable
+	
+	
+-- prepare app-mainCall for single "paint" call like modelfind
+-- cv POD / Selector >> source
+-- evaluation: 
+		--	create(): purpose widSetup//					-- app specific setup // defined by config handler
+		--    actualWidget ={}								-- actual subWidget/app  ["left"] "lean" DATA: typ,page,maxpage  typ=selection
+-- full dark & bright theme
+-- lean subform code Phase2
+-- cleanUp debug code main()
+-- redesign curve
+-- convert all to lang file support incl. forms
+-- cv SOURCE !!
+-- new widget producec config errors // index nil field 644
+-- 1.4.6 source ??
+-- bmp update
+-- change app01 (modfind) resets app02 settings ??ß ggf done!
+-- refresh setting after reconfig in actual widget
+-- on "change app0x" in Form config:  only active after 2nd config call
+-- optimize fileselector & number picloads in pic1
+-- debud picload (mutli loads)
+-- lean subform code Phase1
+-- use standards if no settings in formlines on read
+-- multi lang support in conf files / Formlines
+-- jump "NIL" app
+-- use passed conf in apps
+-- modelfinf button color
+-- basic picture function
+-- get widgetlist from file, not from main source
+-- curve >> better estimate of curve; dyn selection, not "static"; crvExists(crv); source ??
+-- pic: >> picture selectable from file list (fileselector?) https://github.com/FrSkyRC/ETHOS-Feedback-Community/issues/1468
+
+
+
+
+--  Udos Ethos Suite
+--  Rev 1.0
 
 --  this is the very first release  of a lua "suite" for ethos
 --  main idea is to run multiple widgets (also named "sub-Apps , Apps or sub-Widgets") in one widget frame
@@ -33,10 +113,6 @@
 -- ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 -- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 -- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
--- Revisions
--- 1.0	initial test roll out
--- 1.1	load lib using require instead loadfile
 
 
 
@@ -119,7 +195,15 @@ debug5  	= true			-- sport request
 debug6 	= true			-- handler
 debug7 	= true			-- print demoMode
 
-
+ -- perfmonitor
+ local PM_NUM_ENTRIES <const>		= 10					-- averaging over n entries
+ local PM_array 					= {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+ local PM_last_start				= os.clock()
+ local PM_interval					= 0
+ local PM_pointer					= 1
+ local PM_display					= false
+ 
+ 
 -- some pathes
 local libPath <const>  			= "/scripts/libUNow/"
 local widgetPath <const>  		= "/scripts/libUNow/widgets/"
@@ -194,7 +278,7 @@ end
 																			-- ************************************************
 																			-- ***		     name widget					*** 
 																			-- ************************************************
-local translations = {en="Udos Suite 1.0"}
+local translations = {en="Udos Suite 1.0 RC1"}
 
 local function name(widget)					-- name script
   local locale = system.getLocale()
@@ -478,12 +562,12 @@ end
 --	subform items are prepared
 
 local function reAssignWidgets(value,index,appIndex,widget)
-		print("REASSIGN WAS CALLED value,index",value,index)
+		print("REASSIGN WAS CALLED value,index,appIndex",value,index,appIndex)
 		local offset = 0													-- 0= left, 30= right widget	in case of multi frame environtment			
 
 		local appIndex = index-OFFSET									-- index which starts by 1
 		local slot = appIndex*10+offset+1								-- Top_1, Center_1, Bottom_1 ..
-		print("REASSIGN WAS CALLED value,index,appIndedx,slot",value,index,appIndex,slot)
+
 		if value >1 then													-- represents choice list index: so get corresponding subForm if something was selected (1=nothing)
 					
 --			local assignment = lookup[value][2]									-- get the "appindex" (widgetList index); we to substract 1 because choicefield returns 2 as first valid app
@@ -491,7 +575,7 @@ local function reAssignWidgets(value,index,appIndex,widget)
 		
 			widgetAssignment[slot] 	= widgetList[assignment]			-- assignindex e.g. "Top_1" slot  =  widgetList[#6]  .label = "setcurve" (#6 = setcurve App)
 			widget.appTxt[slot] 	= widgetList[assignment].txt		-- here we load lang specific text !
-			print("assign: ",slot,assignment,widgetList[assignment].label,widgetList[assignment].mainfunc)
+
 			widget.subForm[appIndex]=migrateForm(getSubForm(value,widgetAssignment[slot].txt,widget.language))
 --		--	print("set subform for app ".. appIndex .. "   with number of items:  ",#widget.subForm[appIndex])
 		else
@@ -729,50 +813,25 @@ local function create()
 	---- load standard libs --- 
 	---------------------------			
 	txt = dofile(suitePath.."suite_lang.lua")	
---[[		
-	require(suitePath.."suite_conf")												-- sub-widget/ "apps"  assignment & config		
-	require(libPath.."lib_standards")												-- basic functions
-	require(libPath.."lib_relative_draw")											-- functions for "relative draw" / use of percent values instead of absolut pixels / so x,y : 100,100 would be right down corner of a frame
-	require(libPath.."lib_getTele")													-- telemetry functions 
-	require(libPath.."lib_drawIcons")	
-	require(libPath.."lib_FileIO")													-- file IO
---]]
+			
+	loaded_chunk = assert(loadfile(suitePath.."suite_conf.lua"))						-- sub-widget/ "apps"  assignment & config
+	loaded_chunk()
 
-	if not(LIB_SuiteConf) then
-		loaded_chunk = assert(loadfile(suitePath.."suite_conf.lua"))						-- sub-widget/ "apps"  assignment & config
-		loaded_chunk()
-	end
-	
-	if not(LIB_Standards) then
-		loaded_chunk = assert(loadfile("/scripts/libUnow/lib_standards.lua"))
-		loaded_chunk()
-	end
+	loaded_chunk = assert(loadfile("/scripts/libUnow/lib_standards.lua"))
+	loaded_chunk()
 
-	if not(LIB_RelDraw) then
-		loaded_chunk = assert(loadfile("/scripts/libUnow/lib_relative_draw.lua"))			-- functions for "relative draw"
-		loaded_chunk()																		-- use of percent values instead of absolut pixels
-		print(" +++++++++++    RELDRAW LOADED BY SUITE1  +++++++++++++")					-- so x,y : 100,100 would be right down corner of a frame	
-	else
-		print(" ----------    SUITE1: reldraw loaded before -----------")
-	end																	
+	loaded_chunk = assert(loadfile("/scripts/libUnow/lib_relative_draw.lua"))			-- functions for "relative draw"
+	loaded_chunk()																		-- use of percent values instead of absolut pixels
+																						-- so x,y : 100,100 would be right down corner of a frame	
+	loaded_chunk = assert(loadfile("/scripts/libUnow/lib_getTele.lua"))					-- telemetry functions 
+	loaded_chunk()	
 	
+	loaded_chunk = assert(loadfile("/scripts/libUnow/lib_drawIcons.lua"))
+	loaded_chunk()
 
-	if not(LIB_GetTele) then
-		loaded_chunk = assert(loadfile("/scripts/libUnow/lib_getTele.lua"))					-- telemetry functions 
-		loaded_chunk()	
-	end
+	loaded_chunk = assert(loadfile("/scripts/libUnow/lib_FileIO.lua"))
+	loaded_chunk()
 	
-	if not(LIB_DrawIcons) then	
-		loaded_chunk = assert(loadfile("/scripts/libUnow/lib_drawIcons.lua"))
-		loaded_chunk()
-	end
-	
-	if not(LIB_FileIO) then
-		loaded_chunk = assert(loadfile("/scripts/libUnow/lib_FileIO.lua"))
-		loaded_chunk()
-	end
-	
-
 	---------------------------
 	----   var declaration  --- 
 	---------------------------			
@@ -854,7 +913,6 @@ local function create()
 
 	local lastWidget = nil						-- widget which was selected on last run
 
-	print("CHECK oncreate 840",TSTTST)
 	
   return{	
 		numItems	 = numItems, 				-- number of lines in "main" form
@@ -909,20 +967,11 @@ local function frontendConfigure(widget)
 			}
 
 	-- **********************************************    load basics    ******************************
---[[
--		require(libPath.."conf_displaySets")				-- evaluate tx type and set font size etc..
-		require(libPath.."/themes/theme1")					-- color schemes
---]]
-
-	if not(LIB_ConfDisp) then
 		loaded_chunk = assert(loadfile("/scripts/libUnow/conf_displaySets.lua"))		-- evaluate tx type and set font size etc..
 		loaded_chunk()
-	end
 
-	if not(LIB_Theme1) then
 		loaded_chunk = assert(loadfile(libPath .."/themes/theme1.lua"))					-- color schemes
 		loaded_chunk()
-	end
 	
 	widget.theme = initTheme(evalTheme(widget))												-- ensure theme change will be activated
 
@@ -930,13 +979,7 @@ local function frontendConfigure(widget)
     -- load selected apps / subWidgets (configuration in file "_conf"):
 	for i=2,4 do
 		if  widgetAssignment[widArray[i] ].label ~= "EMPTY" then
-			local file = widgetAssignment[widArray[i] ].File
-	--[[		
-			local fLen = string.len(file)
-			file = string.sub(file,1,fLen-4)
-			require(widget.wpath.. file)
-	--]]
-			loaded_chunk = assert(loadfile(widget.wpath .. widgetAssignment[widArray[i] ].File ))
+			loaded_chunk = assert(loadfile(widget.wpath.. widgetAssignment[widArray[i] ].File ))
 			loaded_chunk()
 		end
 	end
@@ -1074,7 +1117,23 @@ end
 																			-- ************************************************
 
 local function wakeup(widget)
---	print("CHECK",TSTTST)
+	PM_t_start 					= os.clock()					-- handler start time
+	PM_array[PM_pointer] 		= PM_t_start - PM_last_start 	-- store interval time
+	PM_last_start				= PM_t_start
+	PM_pointer 					= PM_pointer +1				-- increment pointer
+	if PM_pointer > PM_NUM_ENTRIES then				-- check array boundaries
+		PM_pointer = 1
+		PM_display = true							-- activate avg calculation
+	end
+	
+	if PM_display then
+		local PM_sum=0
+		for i =1,PM_NUM_ENTRIES do
+			PM_sum = PM_sum + PM_array[i]		
+		end
+		local avg_cycleTime = PM_sum/PM_NUM_ENTRIES
+		print("*****************    cycle time Suite 1:     ",avg_cycleTime)
+	end
 
 	if initAppConfig == false then											-- in case user changed configuration during runtime >> trigger reconfig of sub-apps
 			resetAppConfigFlag(widget)
@@ -1125,10 +1184,7 @@ end
 																			-- ***	if subApp identified, load lang file     ***
 																			-- ****************************************************
 local function read(widget)
---	require(suitePath.."suite_conf")												-- sub-widget/ "apps"  assignment & config	
---	print("CHECK on read 1106",TSTTST)
 	local index,indx2
-	
 	local lookup = defApplist()
 
 
@@ -1151,6 +1207,7 @@ local function read(widget)
 
 		local value = lookup[widget.conf[index][3]][2]						-- value represents return value of widget choice list
 		reAssignWidgets(value,index,appIndex,widget)										-- assign subApp
+
 	end
 	
 	

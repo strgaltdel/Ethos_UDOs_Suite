@@ -17,12 +17,12 @@ function initTheme(choice)
 	themeTemplate[1]= {								-- dark
 	-- colors
 			-- monochrome
-		c_backgrAll 	= lcd.RGB(  0,   0,   0),
-		c_backgrWid 	= lcd.RGB( 70,  70,  70),
+		c_backgrAll 	= lcd.RGB(  0,   0,   0),		-- background universal
+		c_backgrWid 	= lcd.RGB( 70,  70,  70),		-- background widgets
 		c_backgrEDT		= lcd.RGB(120, 120, 120),
-		c_frontAll	 	= lcd.RGB(255, 255, 255),
+		c_frontAll	 	= lcd.RGB(255, 255, 255),		-- frontend universal color
 			-- color
-		c_backgrTop 	= lcd.RGB(100,  10,  10),
+		c_backgrTop 	= lcd.RGB(100,  10,  10),		-- background topbar
 		c_light1		= lcd.RGB(255, 255,   0),
 
 
@@ -33,6 +33,7 @@ function initTheme(choice)
 		c_textHeader	= lcd.RGB(140, 140, 140),
 		c_textInvert	= lcd.RGB(0,   0,   0),
 		c_textgrey1		= lcd.RGB(130, 130, 130),
+		c_textgrey2		= lcd.RGB(170, 170, 170),
 		c_textdark		= lcd.RGB(190, 190, 190),
 		-- color
 		c_textRed		= lcd.RGB(255,  30,  30),
@@ -83,6 +84,7 @@ function initTheme(choice)
 		c_textHeader	= lcd.RGB(110, 110, 110),		
 		c_textInvert	= lcd.RGB(255, 255, 255),
 		c_textgrey1		= lcd.RGB(130, 130, 130),
+		c_textgrey1		= lcd.RGB( 90,  90,  90),
 		c_textdark		= lcd.RGB(140, 140, 140),
 			-- color
 		c_textRed		= lcd.RGB(255,  30,  30),

@@ -114,7 +114,7 @@ function defineSensors(widget)
 	]]
 
 		
-
+print("return sensorlist")
 	return sensors
 	
 end

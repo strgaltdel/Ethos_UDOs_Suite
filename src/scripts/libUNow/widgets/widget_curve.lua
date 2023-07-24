@@ -46,7 +46,7 @@
 
 
 -- these constants can be customized by user preferences
-local SIM_TRIM					= true							-- simulate Trims by switches (used in sim on PC)
+local SIM_TRIM					= false							-- simulate Trims by switches (used in sim on PC)
 
 local DELAY_PNT <const>			= 0.8							-- delay ouf point announcement after new one was selected (prevent "announcement stakkato" in case you browse through several points)
  
@@ -170,7 +170,7 @@ end
 --      get point selector value (via momentary / LSW)
 -- --------------------------------------
 local function  getSelectorVal(switch,mode)
-	print("got mode",switch,mode)
+	-- print("got mode",switch,mode)
 	local newValue
 	if 		mode == MODE_MOMENTARY then
 		newValue  = getSwitch(switch)
@@ -179,7 +179,7 @@ local function  getSelectorVal(switch,mode)
 	else
 		newValue  = getLSwitch(switch)
 	end
-	print("switchValue ",newvalue)
+	--print("switchValue ",newvalue)
 	return newValue
 end
 
@@ -227,7 +227,7 @@ local function  getTrim_Val(switch)
 			valLeft  = srcLeft:value()
 			valRight = srcRight:value()
 	end
-	print("return trim val",valLeft,valRight)
+	-- print("230 return trim val",valLeft,valRight)
 	return valLeft,valRight
 end
 
@@ -236,7 +236,20 @@ end
 -- --------------------------------------
 local function getPotVal(Pot)
 	local deadzone = 4									-- deadzone in percent
-	local position = getAnalog(Pot)/10.24
+	local position = 0
+	
+
+	if Pot == "Slider left" or Pot == "Slider right" then
+		-- print("241 slider detect")
+		local src  = system.getSource({category=CATEGORY_ANALOG, member = 6})
+		position = -src:value()/10.24
+	else
+		position = -getAnalog(Pot)/10.24
+	end
+
+	
+--	position = getAnalog(Pot)/10.24
+--	print("247 got",position)				   
 	if math.abs(position) < deadzone then 					
 		return 0,true									-- within deadzone / neutral = true
 	else
@@ -617,9 +630,9 @@ local function trimHandling(member1,member2,Numitems,var,selMode)
 		local valRight = srcRight:value() > 0		
 --]]			
 		local valLeft,valRight = getTrim_Val(switch)
-		
+		-- print("620 trim: ",valLeft,valRight)
 		newValue  = valLeft > 0 or valRight > 0															-- determine if trim is pressed
-		print("514 trimhandling handle 0=idle, 1=changing, 2=saved", var.itmHandle)
+	--	print("622 trimhandling handle 0=idle, 1=changing, 2=saved", var.itmHandle)
 		
 		if newValue and  var.itmSwTime == 0 then													-- trim is nitially pressed, further investigation:
 			if valLeft>0 then 
@@ -682,12 +695,12 @@ local function itmSelect(switch,Numitems,var,selMode)
 	local member2
 
 	local newValue
-	print("503 selMode",selMode)
+	-- print("685 selMode",selMode)
 	--   ***********************************************		
 	--   *******         momentaries                ****	
 	--   ***********************************************	
 	if selMode == MODE_MOMENTARY or selMode == MODE_LSW then	
-			print("508 enter mom")
+			-- print("508 enter mom")
 			momentHandling(switch,Numitems,var,selMode)
 		
 --[[		
@@ -796,6 +809,7 @@ end
 
 -- function setCurve(frameX,page,layout,theme,touch,evnt,subConf,appConfigured,appTxt,widget)
 function setCurve(frameX,page,layout,theme,touch,evnt,subConf,appConfigured,txt,widget)
+--	print("************    setcurve called   *************")
 	lookupPot={								-- !!! analog input name; sequence / index MUST CORRESPOND TO FORM CHOICELIST // Config handler !!!!!  >> file suite_conf.lua
 		"Pot1",								-- could be done more elegant, but so we have a tiny/easy choice List
 		"Pot2",	
@@ -946,10 +960,10 @@ function setCurve(frameX,page,layout,theme,touch,evnt,subConf,appConfigured,txt,
 	-- ***************************    "PAINT"       *********************************************************
 	
 	-- widget,theme,frameX, Cv  (var=global!!)
-	lcd.invalidate()																-- on every call full refresh
-	lcd.color(widget.theme.c_backgrAll )											-- clear screen
-	lcd.drawFilledRectangle(1,1,widget.w,widget.h)
-	
+	--lcd.invalidate()																-- on every call full refresh
+	--lcd.color(widget.theme.c_backgrAll )											-- clear screen
+	--lcd.drawFilledRectangle(1,1,widget.w,widget.h)
+	drawBackground(frameX,theme)
 	highlightBar(var.itmActual,crv,Cv.marker.outer,Cv.yWidth,Cv.scaleX ,frameX) 	-- highlight tuning area
 				
 	drawCursor(xA,Cv.yUp,xA,Cv.yDwn, frameX, Cv.thickness,theme)					-- draw Cursor	

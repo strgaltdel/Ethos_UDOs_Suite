@@ -1,0 +1,27 @@
+<NotepadPlus>
+    <Session activeView="0">
+        <mainView activeIndex="5">
+            <File firstVisibleLine="0" xOffset="0" scrollWidth="3864" startPos="10573" endPos="10582" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\universal\main.lua" backupFilePath="" originalFileLastModifTimestamp="1662978140">
+                <Mark line="671" />
+            </File>
+            <File firstVisibleLine="185" xOffset="0" scrollWidth="2416" startPos="5861" endPos="5861" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\libUnow\widget_ann.lua" backupFilePath="" originalFileLastModifTimestamp="1662981939" />
+            <File firstVisibleLine="37" xOffset="0" scrollWidth="1957" startPos="2511" endPos="2511" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\libUnow\lib_Topwidget.lua" backupFilePath="" originalFileLastModifTimestamp="1662980648" />
+            <File firstVisibleLine="0" xOffset="0" scrollWidth="1236" startPos="511" endPos="502" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\libUnow\conf_displaySets.lua" backupFilePath="" originalFileLastModifTimestamp="1661778728" />
+            <File firstVisibleLine="0" xOffset="0" scrollWidth="1885" startPos="0" endPos="0" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\universal\uni_conf.lua" backupFilePath="" originalFileLastModifTimestamp="1661780087" />
+            <File firstVisibleLine="16" xOffset="0" scrollWidth="1378" startPos="0" endPos="0" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\universal\uni_display.lua" backupFilePath="" originalFileLastModifTimestamp="1662972994" />
+            <File firstVisibleLine="0" xOffset="0" scrollWidth="3291" startPos="1211" endPos="1211" selMode="0" lang="Lua" encoding="-1" filename="D:\tmp_u\20 sdcard\x12 237.wrk\SCRIPTS\MIXES\switch.lua" backupFilePath="" originalFileLastModifTimestamp="1599548327" />
+            <File firstVisibleLine="0" xOffset="0" scrollWidth="948" startPos="794" endPos="794" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\raupen Kingpad\V0.4\Kingpad Source\main.lua" backupFilePath="" originalFileLastModifTimestamp="1644836168" />
+        </mainView>
+        <subView activeIndex="0">
+            <File firstVisibleLine="5" xOffset="0" scrollWidth="1466" startPos="1451" endPos="1451" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\universal\uni_lang.lua" backupFilePath="" originalFileLastModifTimestamp="1662982366" />
+            <File firstVisibleLine="0" xOffset="0" scrollWidth="3864" startPos="12895" endPos="12895" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\universal\main.lua" backupFilePath="" originalFileLastModifTimestamp="1662978140">
+                <Mark line="671" />
+            </File>
+            <File firstVisibleLine="393" xOffset="0" scrollWidth="2528" startPos="353" endPos="324" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\libUnow\widget_ann.lua" backupFilePath="" originalFileLastModifTimestamp="1662981939" />
+            <File firstVisibleLine="20" xOffset="0" scrollWidth="2013" startPos="790" endPos="790" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\libUnow\widget_teleElectro1.lua" backupFilePath="" originalFileLastModifTimestamp="1662974541" />
+            <File firstVisibleLine="0" xOffset="0" scrollWidth="1624" startPos="2724" endPos="2724" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\libUnow\widget_top1.lua" backupFilePath="" originalFileLastModifTimestamp="1662979467" />
+            <File firstVisibleLine="9" xOffset="0" scrollWidth="2860" startPos="937" endPos="954" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\libUnow\lib_getTele.lua" backupFilePath="" originalFileLastModifTimestamp="1660048457" />
+            <File firstVisibleLine="0" xOffset="0" scrollWidth="1028" startPos="422" endPos="411" selMode="0" lang="Lua" encoding="-1" filename="D:\Programme_U\Ethos\X20\scripts\universal\uni_theme.lua" backupFilePath="" originalFileLastModifTimestamp="1662978274" />
+        </subView>
+    </Session>
+</NotepadPlus>

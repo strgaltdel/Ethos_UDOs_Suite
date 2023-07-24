@@ -42,7 +42,7 @@
 -- **************************************************************************************************
 
 
-local OFFSET <const> = 1								-- two main config items, so Offset = 2
+--local OFFSET <const> = 1								-- two main config items, so Offset = 2
 
 
 local debug1 <const>			= false					-- print qr calc timestamps
@@ -68,6 +68,28 @@ local libPath <const>  			= "/scripts/libUNow/"
 local widgetPath <const>  		= "/scripts/libUNow/widgets/"
 local localPath <const>  		= "/scripts/libUNow/widgets/Modelfind"
 
+
+-- *******************************************
+local FPATH_COORD <const> = ("/scripts/SRC_Gps_UN/data/")
+														--flag test run 
+
+LastGps = {}
+		LastGps.lat 			= 0												-- actual received Coord.
+		LastGps.lon 			= 0												-- no lock on start
+		LastGps.changed 		= false											-- new coordinates ?
+		LastGps.mustPaint 	= false											-- QR must be painted
+		LastGps.lastPaint	= os.clock()										-- QR was last painted at....
+		LastGps.OldLat 		= 0												-- needed to detect changes
+		LastGps.OldLon 		= 0
+		LastGps.stored 		= false											-- "actual" coord. stored
+		LastGps.fileLon		= 0												-- coord. from file
+		LastGps.fileLat		= 0
+		LastGps.fileTme		= 0
+		LastGps.fileWasRead	= false
+		
+		LastGps.lock		= false
+		LastGps.testmode	= false
+-- *******************************************		
 
 	
 --[[	
@@ -1439,7 +1461,6 @@ end
 
 
 
-
 -- ***************************************************************************************************************************
 -- **********************************************        Here we start         ***********************************************
 -- **********************************************     with the ETHOS part      ***********************************************
@@ -1482,13 +1503,13 @@ end
 local function createQR(widget)
 
 
-	loaded_chunk = assert(loadfile(localPath.. "/layout.lua"))					-- special widget layout parameters , display dependent
-	loaded_chunk()
+--!!	loaded_chunk = assert(loadfile(localPath.. "/layout.lua"))					-- special widget layout parameters , display dependent
+--!!	loaded_chunk()
 
 	-- fields = {}		-- form fields // global !!
 
 	
-	local lsArray, lswNames = evalLS()												-- generate LSW List; lsArray >> choice List; ls names >> raw LSW names	
+--	local lsArray, lswNames = evalLS()												-- generate LSW List; lsArray >> choice List; ls names >> raw LSW names	
 	
 
 		widget.gps = {}																-- widget specific vars
@@ -1513,18 +1534,19 @@ end
 																			-- ***	 ????  really on EVERY CALL ????  		  *** 	
 																			-- ************************************************
 																	
-local function MF_frontendConfigure(widget,appTxt)
+function MF_frontendConfigure(widget,appTxt)
 
 	widget.modelfind = {}
 	widget.modelfind.txt = appTxt
 
 	createQR(widget)
-
+	widget.modelfind.com = {status=0}
+	
 
 	-- **********************************************  				  load basics   			 ******************************
 	
 
-	widget.layout	= defineLayout(widget.display)		
+--!!	widget.layout	= defineLayout(widget.display)		
 	
 
 	
@@ -1552,10 +1574,10 @@ local function MF_frontendConfigure(widget,appTxt)
 
 		
 	if widget.w > 0 then			-- eval succesfull ?
-		print("mf frontend successful")
+		--print("mf frontend successful")
 		return(true)
 	else
-		print("mf frontend NOT *******successful",widget.w)
+		--print("mf frontend NOT *******successful",widget.w)
 		return(false)	
 	end
 
@@ -1611,15 +1633,17 @@ end
 																			-- ************************************************																		
 local function drawHead(widget,frm,calcRunning)
 	
-		lcd.color(widget.theme.c_backgrAll )
-		lcd.drawFilledRectangle(1,1,widget.w,widget.h)									-- clear aerea
+--		lcd.color(widget.theme.c_backgrAll )
+--		lcd.drawFilledRectangle(1,1,frm.w,frm.h)									-- clear aerea
+		lcd.color(widget.theme.c_backgrWid)
+		drawBackground(frm,theme)
 
 		lcd.font(txtSize.Xsml)															-- disp coordinates
 		lcd.color(widget.theme.c_textStd)
-
+		print ("check A",widget.layout.tab0,widget.layout.line1,widget.modelfind.txt.lastcoord[lan])
 		frame.drawText(widget.layout.tab0,widget.layout.line1,widget.modelfind.txt.lastcoord[lan],LEFT, frm)			-- text "last coordinates"
 		frame.drawText(50,widget.layout.lastline,"2022, Udo Nowakowski",CENTERED, frm)
-		
+		print "check B"
 		if not(LastGps.lock) then														-- no lock
 				lcd.color(widget.theme.c_textAlarm)
 		end
@@ -1707,23 +1731,24 @@ end
 																			-- ***   draw QR Code from calculated pattern-array  *** 
 																			-- *****************************************************
 local function drawQR(widget,frm,yOffset)	
-		lcd.invalidate(0,100,310,200)
+--		lcd.invalidate(0,100,310,200)		-- 6.7. ???
+		yOffset = 0.6
 		if pcall(function() if widget.gps.pattern[1][1] == nil then print"OK" end end) then					-- main QR Paint subroutine; ensure you have an filled array
 			local modul = #widget.gps.pattern
 			local x,y		
-			local yHeight = (1-yOffset-0.05)
-			local effHeight = yHeight*widget.h
-
-			local pixelSize = math.floor(math.min(effHeight,widget.w)/modul-0.5)
-
-			local xPos, yPos = (widget.w-modul*pixelSize)/2,(widget.h*yOffset)
+			local yHeight = (1-yOffset-0.05)							-- percent y-area to be filled
+			local effHeight = yHeight*frm.h
+--			print("sizing qr",frm.h,effHeight,frm.w)
+			local pixelSize = math.floor(math.min(effHeight,frm.w)/modul-0.5)*2
+--			print("sizing qr",frm.h,effHeight,frm.w,pixelSize,pixelSize*modul)
+			local xPos, yPos = (frm.w-modul*pixelSize)/2,(frm.h*yOffset)
 			
 
 			lcd.color(widget.theme.c_frontAll)
 			for y=1,#widget.gps.pattern do
 				for x=1,modul do
 					if widget.gps.pattern[x][y] >0 then
-						lcd.drawFilledRectangle(xPos+x*pixelSize,yPos+y*pixelSize,pixelSize,pixelSize)
+						lcd.drawFilledRectangle(xPos+x*pixelSize+frm.x,yPos+y*pixelSize,pixelSize,pixelSize)
 					end
 				end
 			end
@@ -1735,7 +1760,7 @@ end
 																			-- ***		     "display handler"		*** 
 																			-- ************************************************
 local function paintQR(widget,frm)
-	lcd.invalidate(0,0,310,100)
+	--lcd.invalidate(0,0,310,100)
 	local localID = system.getLocale()																-- refresh language in case changed during runtime
 	if localID =="de" then
 		lan = 1
@@ -1818,12 +1843,12 @@ end
 																			
 																			
 																			
- local function eventModelFind(category, value, x, y, frameW, frameH, button)
+ local function eventModelFind(category, value, x, y, frameW, frameH, xOffs, yOffs, button)
 	local handler
 
-	local MFindHandleroffset = 500
-	-- only touch is relevant in this app:
+	local MFindHandleroffset = 500				-- only touch is relevant in this app, mf=hdl 500:
     if category == EVT_TOUCH then
+
 
         if debug3 then 
 			if 		value == KEY_ENTER_LONG then  print("    value key_long:",  value, x, y) 
@@ -1835,13 +1860,21 @@ end
 		end	
 	
 		if value == TOUCH_END then												-- evaluate menu handler		
+
 			for i = 1 ,#button do										-- button handler/ button touched ?
 				--local button = button[i]
+
+
+				local bXstart 		=  button[i].xRel/100*frameW 					+ xOffs
+				local bXend 		=  (button[i].xRel+button[i].wRel)/100*frameW 	+ xOffs
+				local bYstart 		=  button[i].yRel/100*frameH					+ yOffs
+				local bYend 		=  (button[i].yRel+button[i].hRel)/100*frameH	+ yOffs
 				
-				local bXstart 	=  button[i].xRel/100*frameW
-				local bXend 		=  (button[i].xRel+button[i].wRel)/100*frameW
-				local bYstart 	=  button[i].yRel/100*frameH
-				local bYend 		=  (button[i].yRel+button[i].hRel)/100*frameH
+				print("check save idx,  x,y,  :",i," : ",	x,y,bXstart,bXend,bYstart,bYend)		
+				if i== 2 then
+						
+					--	print("   butt  X..Y   :",bXstart,bXend,bYstart,bYend)
+				end
 
 				if  x >  bXstart  and x< bXend and y>bYstart and y<bYend then
 					if debug3 then  print("Button pressed",i) end
@@ -1867,6 +1900,7 @@ end
 																						-- ****************************************************
 
 function main_MFinder(frameX,page,layout,theme,touch,evnt,subConf,appConfigured,appTxt,widget)
+
 		if not(appConfigured) then												-- o
 			appConfigured = MF_frontendConfigure(widget,appTxt)
 			for i = 1,#subConf do
@@ -1874,11 +1908,12 @@ function main_MFinder(frameX,page,layout,theme,touch,evnt,subConf,appConfigured,
 			end
 			
 		end	
+		
 
 		LastGps.testmode = subConf[1]
 
 		
-		widget.gps.handler =  eventModelFind(evnt.category, evnt.value, evnt.x, evnt.y, frameX.w, frameX.h, widget.modelfind.button)
+		widget.gps.handler =  eventModelFind(evnt.category, evnt.value, evnt.x, evnt.y, frameX.w, frameX.h, frameX.x, frameX.y, widget.modelfind.button)
 		resetWidHandler(widget)
 	
 				
@@ -1912,8 +1947,10 @@ function main_MFinder(frameX,page,layout,theme,touch,evnt,subConf,appConfigured,
 		
 		if debug4 then print("HANDLER INFO",widget.gps.handler,not(LastGps.stored)) end
 		if widget.gps.handler ==  MFind_handlerSave  and not(LastGps.stored)  then						-- **********************    write Coord. into file requested   ****************************
-			local src= system.getSource({name=GPS_SOURCE})									-- get src script parameters		
-			src:value(1)																	-- set 1 = trigger write into file
+	print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!      sAVE pressed")
+			--local src= system.getSource({name=GPS_SOURCE})									-- get src script parameters		
+			--src:value(1)																	-- set 1 = trigger write into file
+			widget.modelfind.com.status = 1
 			LastGps.stored = true															-- reflag file status
 			if debug4 then print("save pressed") end
 			widget.gps.handler = 500
@@ -1921,9 +1958,10 @@ function main_MFinder(frameX,page,layout,theme,touch,evnt,subConf,appConfigured,
 		
 		if widget.gps.handler ==  MFind_handlerLoad  then											-- *************************    read from file requested    ****************************
 			widget.gps.foreground = false												-- stop cyclic calc
-
-			local src = system.getSource({name=GPS_SOURCE})	
-			src:value(2)																-- get src script parameters	// set 2 = read "last" coordinates from file	
+print("*********************************************      load pressed")
+			--local src = system.getSource({name=GPS_SOURCE})	
+			--src:value(2)																-- get src script parameters	// set 2 = read "last" coordinates from file	
+			widget.modelfind.com.status = 2
 			widget.gps.modeLoad = true													-- change mode to "paint file coord"											-- flag "not painted yet"
 
 			if debug4 then print("load pressed") end
@@ -1946,5 +1984,156 @@ function main_MFinder(frameX,page,layout,theme,touch,evnt,subConf,appConfigured,
 		widget.gps.mustCalc = (widget.gps.foreground and (LastGps.lastPaint	 < (os.clock() -INTERVAL))  or widget.gps.LoadMustPaint ) and  LastGps.lat ~=0  and  widget.w ~=nil
 																-- enforce screen refresh / paint(widget)
 		paintQR(widget,frameX)
+	
 		return(appConfigured)
 end
+
+
+
+
+-- ***********************************************************************************************************************
+-- ***********************************************************************************************************************
+-- ***********************************************************************************************************************
+-- ***********************************************************************************************************************
+
+
+
+-- 										"background" tasks for modelfinder
+
+
+
+
+local FPATH_COORD <const> = ("/scripts/libUNow/gpsData/")
+
+-- *******************************************
+-- *******************************************
+-- *******************************************
+function saveGPStoFile()
+	print("------------   Save Coordinates   ------------")
+--	local FPATH_COORD <const> = ("/scripts/SRC_Gps_UN/data/")
+	local data = {}
+
+	data[1]=LastGps.lat
+	data[2]=LastGps.lon
+
+	local fName = model.name()	
+	local fileOld02	= FPATH_COORD .. fName .. ".02.txt"
+	local fileOld01 = FPATH_COORD .. fName .. ".01.txt"
+	local filename	= FPATH_COORD .. fName .. ".txt"
+	
+	os.remove(fileOld02)
+	renFile(fileOld01,fileOld02)
+	renFile(filename, fileOld01)
+	
+	writeFile(filename,data)
+	LastGps.changed		= false
+	LastGps.mustPaint = false
+	LastGps.stored 		= true
+end
+
+
+function readGPSfromFile()
+--	local FPATH_COORD <const> = ("/scripts/gpsData/")
+	
+	local data = {}
+	local fName = model.name()	
+	filename = FPATH_COORD.. fName..".txt"
+	print("GPS READ CALLED",FPATH_COORD.. fName..".txt")
+	if pcall(function() data = ReadFile(filename)	end) then
+		print("file read ",LastGps.lat,  LastGps.lon)
+	else
+		print("no GPS File")
+	end
+	
+	LastGps.lat = tonumber(data[1])
+	LastGps.lon = tonumber(data[2])
+	LastGps.OldLat = LastGps.lat
+	LastGps.OldLon = LastGps.lon 
+	LastGps.fileLat = LastGps.lat
+	LastGps.fileLon = LastGps.lon
+	LastGps.fileWasRead = true
+	LastGps.fileTme = os.clock()+0.4					-- add some time to give pauint handler chance to update before calc starts
+	LastGps.changed		= false
+	LastGps.mustPaint = true
+	LastGps.stored 		= true
+
+end
+
+function bg_MFinder(widget)
+	local com = widget.modelfind.com
+	local lat= system.getSource({name="GPS", options=OPTION_LATITUDE})
+	local lon= system.getSource({name="GPS", options=OPTION_LONGITUDE})
+	
+	if LastGps.testmode or pcall(function() if lat:value() == nil then end end)then			-- wether testMode or detect sensor was "OK"
+
+		LastGps.lock	= true
+	
+		if LastGps.lat == nil then													-- ensure numbers (sensor exists, but no lock)
+			LastGps.lat = 0
+			LastGps.lon = 0
+			LastGps.lock			= false
+		end
+				
+		LastGps.OldLat = LastGps.lat
+		LastGps.OldLon = LastGps.lon 
+		
+		-- testmode start 
+		if LastGps.testmode then 												
+			LastGps.lat = LastGps.lat + 0.00004
+			LastGps.lon = LastGps.lon + 0.00001
+			
+			if LastGps.lat > 50.501 then
+					LastGps.lat = 50.50
+					LastGps.lon = 9.950950
+			end
+			if LastGps.lat < 50.50 then
+					LastGps.lat = 50.50
+					LastGps.lon = 9.950950
+			end
+		else																	-- testmode end
+			local tmpLat = lat:value()
+			if tmpLat ~= nil and tmpLat ~= 0 then
+				LastGps.lat = lat:value()
+				LastGps.lon = lon:value()
+			elseif LastGps.fileLat ~= nil and LastGps.fileLat ~= 0 then			-- no sensor but file coord
+				LastGps.lat = LastGps.fileLat
+				LastGps.lon = LastGps.fileLon
+				LastGps.mustPaint 	= false
+				LastGps.lock		= false					
+			else																-- we have nothing !
+				LastGps.lat = 0
+				LastGps.lon = 0	
+				LastGps.mustPaint 	= false
+				LastGps.lock		= false				
+			end
+		end
+		
+		
+		if LastGps.lat == LastGps.OldLat and LastGps.lon == LastGps.OldLon then		-- static
+			LastGps.changed = false
+		else
+			LastGps.changed 		= true
+			LastGps.stored 		= false
+			LastGps.mustPaint 	= true
+
+		end
+	end
+	
+	if  com.status == 1 then													-- save coordinates request
+		saveGPStoFile()
+		com.status =0
+	end	
+	
+	if  com.status == 2 then													-- read coordinates from file request
+		readGPSfromFile()
+		com.status =0
+	end
+	widget.modelfind.com = com
+	return true
+end
+
+
+
+
+
+-- *******************************************

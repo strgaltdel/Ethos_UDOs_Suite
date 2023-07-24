@@ -1,8 +1,8 @@
 -- ********      how to add an app    *********
--- (1) extend local w_XYZ index		;suite1conf()
--- (2) extend widgetList			;suite1conf()
--- (3) extend "apps_template"  		;defApplist()
--- (3) extend subFrm  				;getSubForm()
+-- (1) extend local w_XYZ index		;suite1conf(), create index label & corresp. index
+-- (2) extend widgetList			;suite1conf(), use former created index label
+-- (3) extend "apps_template"  		;defApplist(), pairing choice list entry & index number
+-- (3) extend subFrm  				;getSubForm(), add index label like step (1) and create subform entries
 
 local NIL <const> = 1
 local PICTURE <const> = 2
@@ -33,6 +33,7 @@ function suite1conf()
 	local w_SETCURVE		= 6
 	local w_MODELFIND		= 7
 	local w_Picture			= 8
+	local w_GVAR			= 9
 	local w_EMPTY   		= 99
 
 	local widgetPath <const>  		= "/scripts/libUNow/widgets/"
@@ -48,6 +49,8 @@ function suite1conf()
 		[w_TELE2] 		=	{label="tele2",		File="tele2.lua", 			mainfunc="tele2",			maxpage =1,	active = false},
 		[w_MODELFIND] 	=	{label="Modelfind",	File="modelfind.lua", 		mainfunc="main_MFinder",	maxpage =1,	active = false,  txt = dofile(widgetPath.."Modelfind/lang.lua"),	index = w_MODELFIND},	
 		[w_Picture] 	=	{label="Picture",	File="picture1.lua", 		mainfunc="main_Picture1",	maxpage =1,	active = false,  txt = dofile(widgetPath.."picture1/lang.lua"),		index = w_Picture},	
+		[w_GVAR] 		=	{label="GVar",		File="gvar.lua", 			mainfunc="main_gvar",		maxpage =1,	active = false,  txt = dofile(widgetPath.."gvar/lang.lua"),			index = w_GVAR},	
+
 		--[w_EMPTY] 	=	{label="EMPTY"}
 		[w_EMPTY] 		=	{label="EMPTY",		File="void.lua", 			mainfunc="void",			maxpage =1,}
 	}
@@ -84,6 +87,7 @@ function defApplist(index,revers)
 		{"Picture",8},
 		{"Curve Edit",6},
 		{"Model Finder",7},
+		{"GVAR",9},
 		{"Tele01",4}
 	}
 	if revers then
@@ -112,6 +116,7 @@ function getSubForm(index,txt,lang)
 	local w_SETCURVE		= 6
 	local w_MODELFIND		= 7
 	local w_Picture			= 8
+	local w_GVAR			= 9
 	local w_EMPTY   		= 99
 	
 	
@@ -142,8 +147,17 @@ function getSubForm(index,txt,lang)
 	elseif index == w_TELE01  then
 		subFrm= {	
 --			{"TESTmode", 	"createBooleanField",	nil,	true		},					-- testmode		
+--			{"TESTmode", 	"createBooleanField",	nil,	true		},					-- testmode		
 			{txt.conf[1][lang], 	"createBooleanField",	nil,	true	,default=false	},															-- testmode
 			{txt.conf[2][lang],		"createChoiceField",	nil,	1,	 	{{"Neuron & oXs",1},{"YGE & oXs",2},{"oXs (GPS)",2},{"G-Rx",2},{"minimal",2}}	,default=1	},		-- choose Sensor set
+			}
+	elseif index == w_GVAR  then
+		subFrm= {	
+--			{"TESTmode", 	"createBooleanField",	nil,	true		},					-- testmode		
+			{txt.conf[1][lang], 	"createChoiceField",		nil,	1,	 	{{"Std Electro",1},{"Std Glider",2},{"Scale1",3},{"Scale2",4}}	,default=1	},	
+			{txt.conf[2][lang],		"createChoiceField",		nil,	1,	 	{{"Pot1",1},{"Pot2",2},{"Slider Left",3},{"Slider Right",4}}	,default=1	},	
+			{txt.conf[3][lang],		"createChoiceField",		nil,	1,		{{"SH",1},{"SI",2},{"SJ",3},{"Trim5",4},{"Trim6",5}}			,default=1	},
+			{txt.conf[4][lang],		"createSwitchField",		nil,	1,	 	}
 			}
 	end
 

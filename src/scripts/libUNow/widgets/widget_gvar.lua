@@ -1,7 +1,7 @@
 
---- The lua script "setCurve" is licensed under the 3-clause BSD license (aka "new BSD")
+--- The lua script "gVar" is licensed under the 3-clause BSD license (aka "new BSD")
 ---
--- Copyright (c) 2022, Udo Nowakowksi
+-- Copyright (c) 2023, Udo Nowakowksi
 -- All rights reserved.
 --
 -- Redistribution and use in source and binary forms, with or without
@@ -24,10 +24,10 @@
 -- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
---  setCurve
+--  gvar
 --  suite edition
---  Feb 2023
---  Rev 1.1
+--  Jun 2023
+--  Rev 1.12
 
 
 -- **************************************************************************************************
@@ -118,7 +118,7 @@ local vars  =  {}												-- hosts vars which (and depending function coding)
 
 local var 	=  {}												-- hosts data from actual selected GVar
 																-- start conditions:  GVar_frontendConfigure()
-local bmp =lcd.loadBitmap("/scripts/libUNow/bmp/gvar/ail_dif.png")
+--local bmp =lcd.loadBitmap("/scripts/libUNow/bmp/gvar/ail_dif.png")
 
 		
 local pre <const> = "/scripts/libUNow/audio/de/"				-- sounds for widget
@@ -135,49 +135,49 @@ local sound = {}
 -- *************************    simulate 1.5x gvar lua funcs     **************************
 -- **************************************************************************************		
 
--- later on conbfig via dedicated file:
+-- later on config via dedicated file:
 local function gvarData(dataSet)
 
 	local data = {}
-
+	local imgPath = "/scripts/libUNow/bmp/gvar/"
 	-- set standard
 	data[1] = {
-		{"Differenzierung",			"Diff"			,"diff.wav"},
-		{"Höhentrim Wölb.",		"Cmb 2 Ele"		,"mot2ele.wav"},		
-		{"Höhentrim ButFl.",		"BFl 2 Ele"		,"bfl2ele.wav"},
-		{"Höhentrim Motor",			"Mot 2 Ele"		,"mot2ele.wav"},
-		{"Diff V Ltw",				"V Diff"		,"vdiff.wav"},		
-		{"Höhentrim Stoer",		"Brk 2 Ele"		,"brk2ele.wav"},
+		{"Differenzierung",			"Diff"			,"diff.wav",		img =lcd.loadBitmap(imgPath .. "ail_dif.png")},
+		{"Höhentrim Wölb.",			"Cmb 2 Ele"		,"mot2ele.wav",		img =lcd.loadBitmap(imgPath .. "el_flp.png")},		
+		{"Höhentrim ButFl.",		"BFl 2 Ele"		,"bfl2ele.wav",		img =lcd.loadBitmap(imgPath .. "el_cro.png")},	
+		{"Höhentrim Motor",			"Mot 2 Ele"		,"mot2ele.wav",		img =lcd.loadBitmap(imgPath .. "el_mt.png")},
+		{"Diff V Ltw",				"V Diff"		,"vdiff.wav",		img =lcd.loadBitmap(imgPath .. "ail_dif.png")},		
+		{"Höhentrim Stoer",			"Brk 2 Ele"		,"brk2ele.wav",		img =lcd.loadBitmap(imgPath .. "ail_dif.png")},
 		}
 	
 	-- set extended 1
 	data[2] = {
-		{"Differenzierung",			"Diff"			,"diff.wav"},
-		{"Rate Quer innen",			"Ail 2 Cmb"		,"ail2cmb.wav"},
-		{"Rate Wölb aussen",		"Cmb 2 Ail"		,"cmb2ail.wav"},
-		{"Rate snapflap",			"snapflap"		,"snapflap.wav"},
-		{"Höhentrim Wölbkl",		"Cmb 2 Ele"		,"mot2ele.wav"},
-		{"Höhentrim ButFl.",		"BFl 2 Ele"		,"bfl2ele.wav"},
-		{"Höhentrim Motor",			"Mot 2 Ele"		,"mot2ele.wav"},
-		{"Diff V Ltw",				"V Diff"		,"vdiff.wav"}		
+		{"Differenzierung",			"Diff"			,"diff.wav",		img =lcd.loadBitmap(imgPath .. "ail_dif.png")},
+		{"Rate Quer innen",			"Ail 2 Cmb"		,"ail2cmb.wav",		img =lcd.loadBitmap(imgPath .. "flp(ail).png")},
+		{"Rate Wölb aussen",		"Cmb 2 Ail"		,"cmb2ail.wav",		img =lcd.loadBitmap(imgPath .. "ail(flp).png")},
+		{"Rate snapflap",			"snapflap"		,"snapflap.wav",	img =lcd.loadBitmap(imgPath .. "snapflap.png")},
+		{"Höhentrim Wölbkl",		"Cmb 2 Ele"		,"mot2ele.wav",		img =lcd.loadBitmap(imgPath .. "el_flp.png")},
+		{"Höhentrim ButFl.",		"BFl 2 Ele"		,"bfl2ele.wav",		img =lcd.loadBitmap(imgPath .. "el_cro.png")},
+		{"Höhentrim Motor",			"Mot 2 Ele"		,"mot2ele.wav",		img =lcd.loadBitmap(imgPath .. "el_mt.png")},
+		{"Diff V Ltw",				"V Diff"		,"vdiff.wav",		img =lcd.loadBitmap(imgPath .. "ail_dif.png")},		
 --		{"Höhentrim Stoerkl",		"Brk 2 Ele"		,"brk2ele.wav"},
 		}	
 		
 	-- set Wölbklappe
 	data[3] = {
-		{"Rate Wölben",				"Rate Wölb"		,"rate_cmb.wav"},
-		{"Rate Wölb aussen",		"Cmb 2 Ail"		,"cmb2ail.wav"},
-		{"Höhentrim Wölbkl",		"Cmb 2 Ele"		,"mot2ele.wav"}
+		{"Rate Wölben",				"Rate Wölb"		,"rate_cmb.wav",	img =lcd.loadBitmap(imgPath .. "ail_dif.png")},
+		{"Rate Wölb aussen",		"Cmb 2 Ail"		,"cmb2ail.wav",		img =lcd.loadBitmap(imgPath .. "ail(flp).png")},
+		{"Höhentrim Wölbkl",		"Cmb 2 Ele"		,"mot2ele.wav",		img =lcd.loadBitmap(imgPath .. "el_flp.png")},
 		}
 
 	-- set Höhenruder
 	data[4] = {
-		{"HR Rate ziehen",			"Cmb 2 Ele"		,"ele_rate_up.wav"},		
-		{"HR Rate drücken",			"BFl 2 Ele"		,"ele_rate_dn.wav"},
-		{"HR Expo",					"BFl 2 Ele"		,"ele_expo.wav"},
-		{"Höhentrim Wölbkl",		"Cmb 2 Ele"		,"mot2ele.wav"},		
-		{"Höhentrim ButFl.",		"BFl 2 Ele"		,"bfl2ele.wav"},
-		{"Höhentrim Motor",			"Mot 2 Ele"		,"mot2ele.wav"}
+		{"HR Rate ziehen",			"Cmb 2 Ele"		,"ele_rate_up.wav",	img =lcd.loadBitmap(imgPath .. "ail_dif.png")},		
+		{"HR Rate drücken",			"BFl 2 Ele"		,"ele_rate_dn.wav",	img =lcd.loadBitmap(imgPath .. "ail_dif.png")},
+		{"HR Expo",					"BFl 2 Ele"		,"ele_expo.wav",	img =lcd.loadBitmap(imgPath .. "ail_dif.png")},
+		{"Höhentrim Wölbkl",		"Cmb 2 Ele"		,"mot2ele.wav",		img =lcd.loadBitmap(imgPath .. "el_flp.png")},		
+		{"Höhentrim ButFl.",		"BFl 2 Ele"		,"bfl2ele.wav",		img =lcd.loadBitmap(imgPath .. "el_cro.png")},
+		{"Höhentrim Motor",			"Mot 2 Ele"		,"mot2ele.wav",		img =lcd.loadBitmap(imgPath .. "el_mt.png")},
 		}
 		print("return dataset",dataSet)
 	return data[dataSet]
@@ -693,7 +693,7 @@ end
 ---------------	
 local function drawInfo(Cv,cv_X,cv_Y,crvName ,theme,frameX)
 
-
+--[[     ... old crv code
 	local row 	= (100-Cv.yDwn)/2+Cv.yDwn-1													-- calc y coord of y-row
 	local row2 	= row +7																	-- row2
 
@@ -705,7 +705,7 @@ local function drawInfo(Cv,cv_X,cv_Y,crvName ,theme,frameX)
 	frame.drawText(50, row, "X: " .. tostring(cv_X)				,nil,frameX)				-- point X coord
 	if var.itmHandle == CHANGING then lcd.color(ORANGE) end
 	frame.drawText(50, row2, "Y: " .. tostring(cv_Y)			,nil,frameX)				-- point Y coord
-
+]]
 end
 
 
@@ -764,60 +764,72 @@ local function lookupRowHeight(display)
 	local height= {}
 		
 		height[1]		= {	[FONT_XS] = 14,		[FONT_S] = 16,		[FONT_STD] = 18, 	[FONT_L] = 20,	[FONT_XL] = 24,  	[FONT_XXL] = 28 }	-- row height X20
-		height[2]		= {	[FONT_XS] = 12,		[FONT_S] = 14,		[FONT_STD] = 16, 	[FONT_L] = 18,	[FONT_XL] = 20, 	[FONT_XXL] = 24 }	-- row height X18	
+		height[2]		= {	[FONT_XS] = 14,		[FONT_S] = 16,		[FONT_STD] = 18, 	[FONT_L] = 18,	[FONT_XL] = 20, 	[FONT_XXL] = 24 }	-- row height X18	
 		height[3]		= {	[FONT_XS] = 12,		[FONT_S] = 14,		[FONT_STD] = 16, 	[FONT_L] = 18,	[FONT_XL] = 20,  	[FONT_XXL] = 22 }	-- row height X12/X10
 
 	return height[display]
 end
 
+
+
+
+
 local function disp_GV(gvIndex,i,fontSize,rwHeight,act_row,widget,frm)
 
---	lcd.color(widget.theme.c_textgrey1)
-	lcd.color(lcd.RGB(170, 170, 170))
 	lcd.font(fontSize)
+	lcd.color(widget.theme.c_textHeader)
 
-	local Ystart 	= 5									-- yStart coordinate in %	
+	frame.drawText(50,	2,	"set GVars inFlight",	CENTERED,frm)
+	
+	local Ystart 	= 5										-- yStart coordinate in %	
 	local x1Col		= 3										-- xStart coordinate in % (label)
-	local x2Col		= x1Col +80								-- ...GV value
+	local x2Col		= x1Col +80								-- column ...GV value
 	
 	local gvlabel = gvVar.array[gvIndex][1]					-- label to be displayed
 	local gvValue = getGVar(gvVar.array[gvIndex][2])		-- Value of GVar
 	
-		--			start line			+ delta
-	local Y  = Ystart/100*frm.h  +i*rwHeight
+	local Y  = Ystart  +i*rwHeight
+	local txtCol = widget.theme.c_textgrey2
 	
 	local yOffset = 0
 	if i > act_row then
-		yOffset = 10
+		yOffset = 5
 	elseif i == act_row then
 		yOffset = 3
-		lcd.color(widget.theme.c_backgrEDT)
-		lcd.drawFilledRectangle(0,Y,widget.w,rwHeight+8)
-		--lcd.font(txtSize.std)
-		lcd.font(FONT_L)
-			lcd.color(widget.theme.c_textStd)		
+		
+		lcd.color(widget.theme.c_backgrEDT)						-- paint active GVar marker
+		frame.drawFilledRectangle(0,Y,100,rwHeight+5, frm)
+		
+																-- paint gvar correspinding image
+		local bmpWidth = 80										-- width of bmp in % 
+		local bmpHeight=(bmpWidth*frm.w)*0.66/frm.h				-- height of images = 0.66 * width
+		local yImg	= 100-bmpHeight-2							-- image height = image.w * 0.66 (percent)		
+		local xImg	=(100-bmpWidth)/2
+		
+--		lcd.color(widget.theme.c_backgrWid)						-- paint new image
+--		frame.drawFilledRectangle(xImg,yImg+6,bmpWidth,bmpHeight-8, frm)	
+		frame.drawBitmap(xImg,yImg,gvVar.array[gvIndex].img,bmpWidth,bmpHeight,frm)
+		
+		lcd.font(FONT_L)										-- set "active GVar" txt attributes 
+		txtCol = widget.theme.c_textStd
 	end
 	
+	lcd.color(txtCol)
+	Y  =  Y +yOffset										-- absolute Y coord	
+	frame.drawText(x1Col,	Y,	gvlabel,	LEFT,frm)
+	frame.drawNumber(x2Col,	Y, 	gvValue,	nil,nil,nil,frm)
 
 	
-	
-	local Y  =  Y +yOffset									-- absolute Y coord	
-	local X1 =  x1Col/100*frm.w								-- absolute X coord
-	local X2 =  x2Col/100*frm.w
-	
-	lcd.drawText(X1, Y,gvlabel ,LEFT)						-- finally, we print
-	lcd.drawNumber(X2,Y, gvValue)
-	
---	frame.drawImage(0,70,bmp,100,30,frm)
-	lcd.drawBitmap(0, 0.5*widget.h, bmp, 240, 0.5*widget.h)
 end
+
+
 
 local function drawGVblock(widget,frm)
 	local maxItems 		= 7				 					-- limit number of displays items
 
 	local fontSize  	= txtSize.sml						-- select fontsize
 	local rowHeight 	= lookupRowHeight(2)				-- get disp dep. height per font
-	local rwHeight		= rowHeight[fontSize]				-- get height per line
+	local rwHeight		= rowHeight[fontSize]/frm.h*100		-- get height per line (in percent of frame height)
 	
 	--								real number		limit to allowed maxItems
 	local numItems 		= math.min(gvVar.numItems,math.max(maxItems,gvVar.numItems))		-- determine number of displays items
@@ -965,20 +977,13 @@ function main_gvar(frameX,page,layout,theme,touch,evnt,subConf,appConfigured,txt
 
 
 	-- ***************************    "PAINT"       *********************************************************
-	
-	-- widget,theme,frameX, Cv  (var=global!!)
-	lcd.invalidate()																-- on every call full refresh
-	lcd.color(widget.theme.c_backgrAll )											-- clear screen
-	lcd.drawFilledRectangle(1,1,widget.w,widget.h)
+	-- !! GV presentation layer !!	
 
--- !! GV presentation layer !!	
-		
+
+	
+	drawBackground(frameX,theme)
 	drawGVblock(widget,frameX)																	-- draw GV labels & values
-
---	drawCurve(crv,Cv,frameX,theme)													-- draw curve
-	
---	local headline = widget.setGVar.txt.crvname[lan] .. " "..crv:name()			-- built text for curvename / headline string
---	drawInfo(Cv,cv_X,cv_Y,headline,theme,frameX)									-- draw text/numerical infos
+								-- draw text/numerical infos
 
 	return(appConfigured)
 end
