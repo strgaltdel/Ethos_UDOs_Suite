@@ -499,16 +499,16 @@ end
 -- ***********   					Timer
 
 
-function top_timer(xx,Y1,Y2,Yoffset, frameX,theme, tmrA, tmrAtxt, tmrB, tmrBtxt)
+function top_timer(xx,Y1,Y2,Yoffset, frameX,theme, tmr1, tmrTxt1, tmr2, tmrTxt2)
 	lcd.font(txtSize.sml)
-	local tmrOffset <const>  = 1								-- set 1 in case timer 1 has index 0
+	
 
 	local col_txt 		= lcd.RGB(120, 120, 120)
 	local col_negativ	= lcd.RGB(200, 0, 0)
-	local timA 			= model.getTimer(tmrA-tmrOffset)
-	local timA_val		= timA.value(timA)
-	local timB 			= model.getTimer(tmrB-tmrOffset)
-	local timB_val 		= timB.value(timB)
+	local tim1 			= model.getTimer(tmr1)
+	local t1Val			= tim1.value(tim1)
+	local tim2 			= model.getTimer(tmr2)
+	local t2Val 		= tim2.value(tim2)
 	
 	local xOffs = 6
 	local yTxt1, yTxt2 
@@ -518,70 +518,70 @@ function top_timer(xx,Y1,Y2,Yoffset, frameX,theme, tmrA, tmrAtxt, tmrB, tmrBtxt)
 	
 	--****************    timer 1 formatting   **********************
 	
-	local hourVal = math.floor(math.abs(timA_val)/3600)
+	local hourVal = math.floor(math.abs(t1Val)/3600)
 	local hour = string.format("%i", hourVal)
 	if hourVal < 10 then hour = "0"..hour end
 	
-	local minuteVal =math.floor((math.abs(timA_val)-(hourVal*3600))/60)
+	local minuteVal =math.floor((math.abs(t1Val)-(hourVal*3600))/60)
 	local minute =string.format("%i",  minuteVal)
 	if minuteVal < 10 then minute = "0"..minute end
 	
-	local secVal =  math.abs(timA_val) - (minuteVal*60) - (hourVal*3600)
+	local secVal =  math.abs(t1Val) - (minuteVal*60) - (hourVal*3600)
 	local sec =string.format("%i", secVal)
 	if secVal < 10 then sec = "0"..sec end
 
-	local timerTxtA = minute..":"..sec					-- format mm:ss
+	local timerTxt1 = minute..":"..sec					-- format mm:ss
 	
-	--print("**************  TIMER1",timA_val,hourVal,minuteVal,secVal)
+	--print("**************  TIMER1",t1Val,hourVal,minuteVal,secVal)
 	--****************    timer 2 formatting   **********************
 	
-	hourVal = math.floor(math.abs(timB_val)/3600)
+	hourVal = math.floor(math.abs(t2Val)/3600)
 	hour = string.format("%i", hourVal)
 	if hourVal < 10 then hour = "0"..hour end
 	
-	minuteVal = math.floor((math.abs(timB_val)-(hour*3600))/60)
+	minuteVal = math.floor((math.abs(t2Val)-(hour*3600))/60)
 	minute =string.format("%i",  minuteVal)
 	if minuteVal < 10 then minute = "0"..minute end
 	
-	secVal =  math.abs(timB_val) - (minute*60) - (hour*3600)
+	secVal =  math.abs(t2Val) - (minute*60) - (hour*3600)
 	sec =string.format("%i", secVal)
 	if secVal < 10 then sec = "0"..sec end
 	
-	local timerTxtB = minute..":"..sec										-- format mm:ss
+	local timerTxt2 = minute..":"..sec										-- format mm:ss
 --[[	
-	--print("timer",timerTxtA,timerTxtB)
+	--print("timer",timerTxt1,timerTxt2)
 	lcd.color(theme.c_textgrey1)
-	frame.drawText(xx+xOffs, 	Y1,  tmrAtxt , 	RIGHT ,  frameX)
-	frame.drawText(xx+xOffs, 	Y2,  tmrBtxt , 	RIGHT ,  frameX)	
+	frame.drawText(xx+xOffs, 	Y1,  tmrTxt1 , 	RIGHT ,  frameX)
+	frame.drawText(xx+xOffs, 	Y2,  tmrTxt2 , 	RIGHT ,  frameX)	
 	lcd.color(theme.c_textStd)	
-	frame.drawText(xx+xOffs +0.5, 	Y1,  timerTxtA, LEFT ,  frameX)
-	frame.drawText(xx+xOffs +0.5, 	Y2,  timerTxtB, LEFT ,  frameX)
+	frame.drawText(xx+xOffs +0.5, 	Y1,  timerTxt1, LEFT ,  frameX)
+	frame.drawText(xx+xOffs +0.5, 	Y2,  timerTxt2, LEFT ,  frameX)
 ]]	
 											-- text
 
 	-- TIMER1							
-	if timA_val <0 then 
+	if t1Val <0 then 
 		lcd.color(col_negativ) 
-		frame.drawText(xx+xOffs, 		yTxt1, 	tmrAtxt , 	RIGHT ,  frameX)				-- text
-		frame.drawText(xx+xOffs +0.5, 	yTxt1,  "-"..timerTxtA, 	LEFT ,  frameX)			-- time	
+		frame.drawText(xx+xOffs, 		yTxt1, 	tmrTxt1 , 	RIGHT ,  frameX)				-- text
+		frame.drawText(xx+xOffs +0.5, 	yTxt1,  "-"..timerTxt1, 	LEFT ,  frameX)			-- time	
 	else
 		lcd.color(theme.c_textgrey1)	
-		frame.drawText(xx+xOffs, 		yTxt1, 	tmrAtxt , 	RIGHT ,  frameX)				-- text
+		frame.drawText(xx+xOffs, 		yTxt1, 	tmrTxt1 , 	RIGHT ,  frameX)				-- text
 		lcd.color(theme.c_textStd)	
-		frame.drawText(xx+xOffs +1.5, 	yTxt1,  timerTxtA, 	LEFT ,  frameX)					-- time		
+		frame.drawText(xx+xOffs +1.5, 	yTxt1,  timerTxt1, 	LEFT ,  frameX)					-- time		
 	end
 	
 	
 		-- TIMER2
-	if timB_val <0 then 
+	if t2Val <0 then 
 		lcd.color(col_negativ)
-		frame.drawText(xx+xOffs, 		yTxt2,	tmrBtxt , 	RIGHT ,  frameX)		
-		frame.drawText(xx+xOffs +1.5, 	yTxt2,  "-"..timerTxtB, 	LEFT ,  frameX)		
+		frame.drawText(xx+xOffs, 		yTxt2,	tmrTxt2 , 	RIGHT ,  frameX)		
+		frame.drawText(xx+xOffs +1.5, 	yTxt2,  timerTxt2, 	LEFT ,  frameX)		
 	else
 		lcd.color(theme.c_textgrey1)		
-		frame.drawText(xx+xOffs, 		yTxt2,	tmrBtxt , 	RIGHT ,  frameX)	
+		frame.drawText(xx+xOffs, 		yTxt2,	"-"..tmrTxt2 , 	RIGHT ,  frameX)	
 		lcd.color(theme.c_textStd)	
-		frame.drawText(xx+xOffs +1.5, 	yTxt2,  timerTxtB, 	LEFT ,  frameX)
+		frame.drawText(xx+xOffs +1.5, 	yTxt2,  "-"..timerTxt2, 	LEFT ,  frameX)
 	end
 
 end

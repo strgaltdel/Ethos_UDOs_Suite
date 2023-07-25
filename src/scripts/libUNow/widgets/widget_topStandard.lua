@@ -1,8 +1,8 @@
 -- **************************************************************************************
 -- *************************          top bar menue            **************************
 -- **************************************************************************************
-local TMR1txt <const> = "Flgt:"
-local TMR2txt <const> = "Mot:"
+--local TMR1txt <const> = "Flgt:"
+--local TMR2txt <const> = "Mot:"
 
 print("*******  LOAD LUA: TOPBAR STD")
 
@@ -22,7 +22,12 @@ end
 -- *************************         draw TopLine                 ***********************
 -- **************************************************************************************
 
-function topstd(frameX,page,dummy,theme,touch,evnt,appConfigured,appTxt,widget,sensors,param)			--  page for future implementations
+function topstd(frameX,page,dummy,theme,touch,evnt,subConf,appConfigured,appTxt,widget,sensors,param)			--  page for future implementations
+
+	local timerA 	= subConf[1]
+	local timerAtxt	= subConf[2]..":"
+	local timerB 	= subConf[3]
+	local timerBtxt	= subConf[4]..":"
 
 	local Y1 = 5								-- define line 1 and line2 Y-Position (%)
 	local Y2 = 50
@@ -80,7 +85,7 @@ function topstd(frameX,page,dummy,theme,touch,evnt,appConfigured,appTxt,widget,s
 
 	-- timer flight & Motor
 	--			layout				y1,y2,offset,	frame,theme,tmr#1,txt,tmr#2,txt
-	top_timer(widget.layout.topX1+2,Y1,Y2,Yoffset, frameX, 	theme, 1, 	TMR1txt,	2,	TMR2txt)
+	top_timer(widget.layout.topX1+2,Y1,Y2,Yoffset, frameX, 	theme, timerA, 	timerAtxt,	timerB,	timerBtxt)
 
 	-- switch stati
 	--print("TopLayout: ",widget.layout.width01)

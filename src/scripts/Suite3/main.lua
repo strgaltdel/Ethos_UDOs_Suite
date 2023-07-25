@@ -210,8 +210,8 @@
  local debug6 	= false			-- handler
  local debug7 	= false			-- print demoMode
  local debug8	= false			-- FormBuilt
- local debugConf= true			-- write/read config
- local debugReas= true			-- reassign new params/config to widget
+ local debugConf= false			-- write/read config
+ local debugReas= false			-- reassign new params/config to widget
  local debugLay = false			-- print layout array parameter
  
  -- perfmonitor
@@ -442,7 +442,7 @@ local function assignLayout(widget)
 							-- call widget specific function from global namespace  			
 				--			[appSlot]				= {func = function(frame,page) >> call     functionName							(frame,page,widget.layout 		.... end, maxpage = 1},				--  [*_1] = frame-left: list of "widgets"
 
-							[idx]				= {func = function(frame,page)	return(_G[widgetAssignment[idx].mainfunc](frame,page,	widget.layout,widget.theme,widget.touch,widget.evnt,	widget.appConfigured[idx],	widget.appTxt[idx],		widget,sensors,widget.param[idx]																																))	end, maxpage = 1},		-- call widget specific function from globa
+							[idx]				= {func = function(frame,page)	return(_G[widgetAssignment[idx].mainfunc](frame,page,	widget.layout,widget.theme,widget.touch,widget.evnt,widget.subConf[TOPLINE],	widget.appConfigured[idx],	widget.appTxt[idx],		widget,sensors,widget.param[idx]																																))	end, maxpage = 1},		-- call widget specific function from globa
 
 							}
 							
@@ -627,14 +627,17 @@ local function createChoiceField(line, parameter)
 	return field
 end
 
--- not ready yet
+-- LSW choice list handling
+-- we want to store the LSW uid, so that lsw's can be rearanged
+-- we want a choice list of names, which returns a number if an entry was choosen
+-- so we have to convert vice / versa
 local function createChoiceLSWField(line, parameter)
    local field = form.addChoiceField(line, nil, parameter[5], 	function() 
-																-- get: convert lsw-uid(stored val) into entry of lsw-ChoiceList
+																-- get: convert lsw-uid(stored val) into entry num (src:member) of lsw-ChoiceList
 																	local value 	= getValue(parameter):member()
 																	return value
 																end, 
-																-- set: convert entry of lsw-ChoiceList into lsw-uid
+																-- set: convert selected return value (lsw, int) of lsw-ChoiceList into lsw-uid
 																function(lsw) 
 																	local value = system.getSource({category=CATEGORY_LOGIC_SWITCH, member=lsw})
 																	setValue(parameter, value) 
@@ -710,7 +713,6 @@ local function getChannels()
 		local inputSrc =  system.getSource({category=CATEGORY_CHANNEL, member = i})
 		chArray[i][1]=inputSrc:name()
 		chArray[i][2]=i
-	--	print("Channel",chArray[i][1])
 	end
 	return chArray
 end
@@ -789,7 +791,6 @@ local function migrateForm(formTbl)
 	createChoiceField 	= createChoiceField	,
 	createCurveChoice	= createChoiceField	,
 	createChannelChoice	= createChoiceField	,
---	createLswChoice		= createChoiceField ,
 	createLswChoice		= createChoiceLSWField,
 	createSourceField	= createSourceField	,
 	createFilePicker	= createFilePicker ,
@@ -868,12 +869,10 @@ local function reAssignWidgets(configIndex,appUID,widget)
 		if debugReas then print("   REASSIGN WAS CALLED configIndex,appUID,appIndex,slot",configIndex,appUID,appIndex,slot) end
 		if appUID ~= APPIndexNil then													-- represents choice list index: so get corresponding subForm if something was selected (1=nothing)
 
-			-- if debugReas then print("     NEW assignment",slot,widgetList[appUID].txt) end
 			widgetAssignment[slot] 	= widgetList[appUID]			-- assignindex e.g. "Top_1" slot  =  widgetList[#6]  .label = "setcurve" (#6 = setcurve App)
 			widget.appTxt[slot] 	= widgetList[appUID].txt		-- here we load lang specific text !
 			if debugReas then print("     assign (slot,appUID..): ",slot,appUID,widgetList[appUID].label) end
 			widget.subForm[appIndex]=migrateForm(getSubForm(appUID,widgetAssignment[slot].txt,widget.language))
-			print(" ***********    NEW assignment",slot,widgetAssignment[slot].mainfunc)
 		else														-- fill empty assignment with dummy data to ensure persistency
 			assignEmpty(widget,appIndex)
 		end
@@ -1004,15 +1003,15 @@ local function createSubWidgetField(line, parameter,widget,configIndex,widgetInd
 			local lookup
 			if widgetIndex == TOPLINE then
 				lookup = defTopBarlist()
-				print("950  ********************    OK, got TopBar Sub")
+				--print("950  ********************    OK, got TopBar Sub")
 			else
 				lookup = defApplist()
 			end
 --!!!
 
 				local appUID = lookup[choice] [2]
-				print("*********************************** set appUID , configIndex   *********",appUID,configIndex)
---				print("***************** set app convrt",value)
+				--print("*********************************** set appUID , configIndex   *********",appUID,configIndex)
+
 				setValue(parameter, appUID) 														-- appUID = Choice = selected item from choicelist/defApplist table: 1= nothing
 
 				-- Part1: redefine actual "Formline" App:
@@ -1022,13 +1021,13 @@ local function createSubWidgetField(line, parameter,widget,configIndex,widgetInd
 				form.invalidate()			
 
 				clearSubConf(widgetIndex,widget)														-- init cache array of actual "app" subValues / configuration		
-				print("User called reAssign   appUID,configIndex,widgetIndex   "," ",appUID,configIndex,widgetIndex)
+				--print("User called reAssign   appUID,configIndex,widgetIndex   "," ",appUID,configIndex,widgetIndex)
 
 				reAssignWidgets(configIndex,appUID,widget)
---				print("***********   new form start  ********")
 
-				dumpConf(widget)
-				--dumpSubConf(widget)		
+
+				--dumpConf(widget)
+		
 				--[[			
 				-- Part2: cache other SubForm Values
 				for i = 1,3 do																-- browse through "AppLines"
@@ -1545,13 +1544,12 @@ local function frontendConfigure(widget)
 		for i=1,NumAPPS+1 do
 
 			local label = ""
-			if pcall(function()print("   ++++++++++   app label",i,widgetAssignment[widArray[i] ].label)return end) then
-			print("   ++++++++++   app label",i,widgetAssignment[widArray[i] ].label)
-			end
+--			if pcall(function()print("   ++++++++++   app label",i,widgetAssignment[widArray[i] ].label)return end) then
+--			end
 			if pcall(function() label = widgetAssignment[widArray[i] ].label return end ) then
 				if  widgetAssignment[widArray[i] ].label ~= "EMPTY" then							-- pcall OK >> persistent data, so check for app
 					loadApp(widget.wpath.. widgetAssignment[widArray[i] ].File)
-					print("        //////////////////////////////////////////       LOAD file",widget.wpath.. widgetAssignment[widArray[i] ].File)
+					--print("        //////////////////////////////////////////       LOAD file",widget.wpath.. widgetAssignment[widArray[i] ].File)
 				--	loaded_chunk = assert(loadfile(widget.wpath.. widgetAssignment[widArray[i] ].File ))
 				--	loaded_chunk()
 				--[[		
@@ -1663,7 +1661,6 @@ end
 -- ******** call topBar
 
 local function w_top(widget)
-	print("call top func",TOPLINE,TOPLINEslot,widgetAssignment[TOPLINEslot].mainfunc)
 	if not pcall( layout[TOPLINE] ~= nil) then	
 		local slot = TOPLINE *10 +1
 --		widget.appConfigured[slot]=layout[TOPLINEslot].func(frameTop,1,widget.layout)
@@ -1671,7 +1668,6 @@ local function w_top(widget)
 		--widget.param[TOPLINE]=top18a(frameTop,1,	widget.layout,widget.theme,widget.touch,widget.evnt,	widget.appConfigured[TOPLINE],	widget.appTxt[TOPLINE],		widget,sensors,widget.param[TOPLINE])
 		-- temporarely fixed call
 		--widget.param[TOPLINE]=top18a(frameTop,1,	widget.layout,widget.theme,widget.touch,widget.evnt,	widget.appConfigured[TOPLINE],	widget.appTxt[TOPLINE],		widget,sensors,widget.param[TOPLINE])
-		print("Topline no error")
 	else
 		print("Error calling TopBar")
 	end
@@ -1951,7 +1947,7 @@ local function read_subForm(appIndex,OFFSET,widget)
 			for indx2 = 1,#widget.subForm[appIndex]	do
 	
 				if widget.subForm[appIndex][indx2][1] == "  Cv Input-Src" then			-- handling source
-					tmpSrc = storage.read("souce")
+					tmpSrc = storage.read("source")
 					
 					widget.subForm[appIndex][indx2][3]  = tmpSrc
 					widget.subConf[appIndex][indx2] 	= tmpSrc
@@ -1960,7 +1956,7 @@ local function read_subForm(appIndex,OFFSET,widget)
 	--				widget.subForm[appIndex][indx2][3] = widget.subForm[appIndex][indx2][1])
 					local readVal 						= storage.read("dummy")
 					widget.subForm[appIndex][indx2][3] 	= readVal
-					if debugConf then print(" read subconf Val",appIndex,indx2, readVal) end
+					if debugConf then print("1965 read subconf appIndx, itmIdx, Val:",appIndex,indx2, readVal) end
 					widget.subConf[appIndex][indx2] 	= readVal
 					-- widget.subConf[appIndex][indx2] = widget.subForm[appIndex][indx2][3]
 					-- local readVal = widget.subForm[appIndex][indx2][3]
@@ -2022,7 +2018,7 @@ local function read(widget)
 	--   read app specific sub-formlines
 	--************************		
 	for appIndex = 1,#widget.subForm do													--  loop app specific sub-config; 1=app01, 3=app03 ....; defined by reAssignWidgets
-		print("call subform (appIndex)",appIndex)
+		-- print("call subform (appIndex)",appIndex)
 		read_subForm(appIndex,OFFSET,widget)
 	end
 --	if WIDGET_MODE == TOPBAR_WID then
@@ -2032,7 +2028,7 @@ local function read(widget)
 	
 	
 
-	local dumpResult = true
+	local dumpResult = false
 	if dumpResult then
 		print("**** read finished with result of appConfig :")
 		print("****     Header config")

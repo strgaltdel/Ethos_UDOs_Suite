@@ -19,7 +19,7 @@ end
 -- *************************         draw TopLine                 ***********************
 -- **************************************************************************************
 
-function toplight(frameX,page,dummy,theme,touch,evnt,appConfigured,appTxt,widget,sensors,param)			--  page for future implementations
+function toplight(frameX,page,dummy,theme,touch,evnt,subConf,appConfigured,appTxt,widget,sensors,param)			--  page for future implementations
 
 	local Y1 = 5								-- define line 1 and line2 Y-Position (%)
 	local Y2 = 50

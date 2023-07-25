@@ -265,10 +265,10 @@ function getSubForm(index,txt,lang)												-- only for apps, not used for to
 			}
 	elseif index == w_TopStd  then
 		subFrm= {	
-			{"TimerA select", 		 "createChoiceField",		nil,	1,	 	{{"Timer 1",1},{"Timer 2",2},{"Timer3",3}},	default=1			},																					-- testmode
-			{"TimerA, label (max 4Chars)","createTextField",			nil,	1,	 												default="Flgt"		},	
-			{"TimerB select", 		 "createChoiceField",		nil,	1,	 	{{"Timer 1",1},{"Timer 2",2},{"Timer3",3}},	default=2			},				
-			{"TimerB, label (max 4Chars)","createTextField",			nil,	1,	 												default="Mot"	},	
+			{"TimerA select", 		 						"createChoiceField",		nil,	1,	 	{{"Timer 1",1},{"Timer 2",2},{"Timer3",3}},	default=1			},																					-- testmode
+			{"TimerA, label (max 4Chars)",					"createTextField",			nil,	1,	 												default="Flgt"		},	
+			{"TimerB select", 		 						"createChoiceField",		nil,	1,	 	{{"Timer 1",1},{"Timer 2",2},{"Timer3",3}},	default=2			},				
+			{"TimerB, label (max 4Chars)",					"createTextField",			nil,	1,	 												default="Mot"		},	
 			}
 	else
 		subFrm= {nil,"dummy",nil,nil,nil,nil}																																	-- no subforms

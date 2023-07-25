@@ -1,24 +1,11 @@
 -- **************************************************************************************
 -- *************************          top bar menue            **************************
 -- **************************************************************************************
-local LSW1 <const> 			= "ls10"
-local LSW1name <const> 		= "Flaperon"
-local LSW1txt <const> 		= "Flperon"
---local LSW1 <const> 			= nil
---local LSW1name <const> 		= nil
 
 
 
-
-
-local LSW2 <const> 			= "ls11"
-local LSW2name <const> 		= "Flaperon"
-local LSW2txt <const>		= "snapflp"
---local LSW2 <const> 			= nil
---local LSW2name <const> 		= nil
-
-local LSW_MotWarn <const> 	= "Mot Thr Warning"
-local LSW_MotOn <const> 	= "Motor running"
+--local LSW_MotWarn <const> 	= "Mot Thr Warning"
+--local LSW_MotOn <const> 	= "Motor running"
 
 
 -- *************************         load libs                 ***********************
@@ -38,8 +25,20 @@ end
 -- *************************         draw TopLine                 ***********************
 -- **************************************************************************************
 
-function topfull(frameX,page,dummy,theme,touch,evnt,appConfigured,appTxt,widget,sensors,param)			--  page for future implementations
+function topfull(frameX,page,dummy,theme,touch,evnt,subConf,appConfigured,appTxt,widget,sensors,param)			--  page for future implementations
 
+	local lsTop 			= subConf[1]		-- src LSW
+	local lsTopLabel 		= subConf[2]
+
+	local lsBot 			= subConf[3]		-- src LSW
+	local lsBotLabel		= subConf[4]
+	
+	local lsMotSafe			= subConf[5]		-- src LSW
+	local lsMotArmed		= subConf[6]		-- src LSW
+	local lsMotRunning		= subConf[7]		-- src LSW
+
+	
+	
 	local Y1 = 5								-- define line 1 and line2 Y-Position (%)
 	local Y2 = 50
 
@@ -57,6 +56,10 @@ function topfull(frameX,page,dummy,theme,touch,evnt,appConfigured,appTxt,widget,
 	local rxMax = 5.5
 	local rxVal = 5.0	
 
+	
+	
+	
+	print("*********   para Topfull",subConf[1],subConf[2])
 --	if pcall(sensors["VFR"].name) then
 --	else
 --		sensors["VFR"].bmp = lcd.loadBitmap(sensors["VFR"].path .. "X20/" .. sensors["VFR"].icon)			
@@ -97,11 +100,11 @@ function topfull(frameX,page,dummy,theme,touch,evnt,appConfigured,appTxt,widget,
 
 	-- switch stati
 	--print("TopLayout: ",widget.layout.width01)
-	top_status(widget.layout.topX1,Y1,Y2,Yoffset, frameX, theme, widget.layout,	LSW1name,LSW2name, 	LSW1txt,LSW2txt, 	LSW1,LSW2)
+	top_status(widget.layout.topX1,Y1,Y2,Yoffset, frameX, theme, widget.layout, 	 lsTop, lsBot, lsTopLabel, lsBotLabel)
 	
 	-- safety switch Status	
 	-- param=top_safety(widget.layout.topX2,Y1,Yoffset, frameX, theme,  widget.layout,appTxt ,"Engine_Safe","Engine_ON",param)
-	param=top_safety(widget.layout.topX2,Y1,Yoffset, frameX, theme,  widget.layout,appTxt ,LSW_MotWarn,LSW_MotOn,param)
+	param=top_safety(widget.layout.topX2,Y1,Yoffset, frameX, theme,  widget.layout,appTxt ,lsMotSafe,lsMotRunning,param)
 	-- model name	
 	top_text(widget.layout.topX4,Y1+5,Yoffset, frameX, theme,  widget.layout,model.name(),theme.c_textGreen)	
 

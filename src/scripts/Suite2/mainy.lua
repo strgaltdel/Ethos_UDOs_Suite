@@ -37,30 +37,22 @@
 -- Revisions
 -- 1.0	initial test roll out
 -- 1.1	try to avoid multiple lib loads (require won't work !)
--- 1.2  2023 August
---		major switch to one codebase for single / dual / dual&topbar application
---		support of topBar frames  
---		choice of multiple topbars including parameters
---		layout variant adopted for 3 frames / fullscreen support (bad performance scaling of running multiple lua widgets on a "heavy" model template, so create "one 4 all")
---		enable widget dependent background handler
---		support of default app-config parameters
+-- 1.2  2023 april..july
+--		supports topBar frame  
+--		adopted for 3 frames / fullscreen support (bad performance scaling of running multiple lua widgets on a "heavy" model template, so create "one 4 all")
 --		minor optimization of the data model
---		some performance optimization
---		config handler now stores appIndex directly, not ListIndex of app
+--		config now stores appIndex directly, not ListIndex of app
 -- 		solved bug in case user starts with app02 and leaves app01-slot empty
 --		some optimization of data persistence
 --		delete older remark & debug lines
+--		major switch to one codebase for single / dual / dual&topbar application
 --		some index rework
-
-
-
+--		enable widget dependent background handler
 
 --		to do:  
---					parametric background function call
-
---					topbar full: exchange fixed lsw# vs name
+--					flexible background function call
+--					check single codebase usage
 --					delete unn. prints
-
 
 --		finished
 --					index failure on app deletion, 
@@ -71,14 +63,6 @@
 --					no app, only top defined >> error
 --					no topBar refresh
 --					more index rework
---					check single codebase usage
---					predef standard values for widgets
---					TEXT const for topBar / snapfl.. timer ..
---					consolidate topBar libs
---					garbage collection
---					after very 1st config restart needed		>> 1438 attempt to indexnil value
---					handle neg timers
-
 
 
 -- **************************************************************************************************
@@ -91,7 +75,7 @@
 -- announce            520          540                   ??? under construction
 -- teleEl	                                                ??? under construction
 -- picture	                   not used
--- setCurve                  	not used
+-- setCurve                  not used
 -- **************************************************************************************************
 
 
@@ -147,26 +131,18 @@
  
  ]]
 
- local PERFMON <const> = false					-- true = activate performance measurements
-  
- local SINGLE_WID <const>	 = 1
- local Dual_WID <const>		 = 2
- local TOPBAR_WID <const>	 = 3
-												-- defines global "management" mode of this "wrapper":
- local WIDGET_MODE <const>	 = Dual_WID
- --local WIDGET_MODE <const>	 = TOPBAR_WID
-											--		1 = single frame (e.g. half area of the screen)
-											--		2 = two frames within one ethos widget, e.g. fullscreen with/without TOPLINE
-											--		3 = two frames AND an individual topline , Ethos 100% fullscreen  
+ local PERFMON <const> = true
   
   
+  
+ local SuiteMODE <const>	= 2				-- Mode definition:  1= single frame;  2= dual frame w/o topbar;  3= dual frame & topBar
  local KEY 					= ""			-- Mode dependent Widget key (used by init)
  local NAME					= ""			-- Mode dependent Widget name
  
- if 	WIDGET_MODE == 1 then
+ if 	SuiteMODE == 1 then
 		KEY  = "unowS1"
 		NAME = "Udos Suite 1"
- elseif	WIDGET_MODE == 2 then
+ elseif	SuiteMODE == 2 then
  		KEY  = "unowS2"
 		NAME = "Udos Suite 2"
  else
@@ -181,7 +157,14 @@
  local NumAPPS <const>  	= 6
  
  
-
+ local SINGLE_WID <const>	 = 1
+ local Dual_WID <const>		 = 2
+ local TOPBAR_WID <const>	 = 3
+ 
+ local WIDGET_MODE <const>	 = Dual_WID	-- defines global "management" mode of this "wrapper":
+										--		1 = single frame (e.g. half area of the screen)
+										--		2 = two frames within one ethos widget, e.g. fullscreen with/without TOPLINE
+										--		3 = two frames AND an individual topline , Ethos 100% fullscreen 
 
   local MULTI 		= false
   local TOP_MODE 	= false
@@ -726,7 +709,7 @@ end
 
 
 -- *******************************************************************************
--- translates/converts table entries from file (config form definitions) into functional ones
+-- translates table entries from file (config form definitions) into functional ones
 -- unfortunately direct processing of create... statements not possible
 -- called by subFormBuilt, createSubWidgetField, read handler
 -- *******************************************************************************
@@ -771,16 +754,7 @@ local function migrateForm(formTbl)
 	return formArray
 end
 
-local function assignEmpty(widget,appIndex)								-- "subFunction" to assign an empty slot
-																		-- called by reassignwidgets 
-		local slot = appIndex*10+1								-- Top_1, Center_1, Bottom_1 ..; special case "topbar" later handled
-																		
-		widgetAssignment[slot] 		= widgetList[APPIndexNil]			--"empty" index in widgetlist
-		widget.appTxt[slot] 		= widgetList[APPIndexNil].txt
-		widget.subForm[appIndex]	= {}
-		print("slot empty",slot,APPIndexNil,widgetAssignment[slot].label)
 
-end
 
 --  refresh widget assignment:
 --	txt fields in slot gets corresponding text
@@ -815,7 +789,11 @@ local function reAssignWidgets(configIndex,appUID,widget)
 			widget.subForm[appIndex]=migrateForm(getSubForm(appUID,widgetAssignment[slot].txt,widget.language))
 --
 		else														-- fill empty assignment with dummy data to ensure persistency
-			assignEmpty(widget,appIndex)
+			
+			widgetAssignment[slot] 		= widgetList[APPIndexNil]		--"empty" index in wisdgetlist
+			widget.appTxt[slot] 		= widgetList[APPIndexNil].txt
+			widget.subForm[appIndex]	= {}
+			print("slot empty",slot,APPIndexNil,widgetAssignment[slot].label)
 		end
 	
 
@@ -876,25 +854,20 @@ local function subFormBuilt(parameter,widget,fields,configIndex,appListIdx,slot)
 
 	if #widget.subForm[widgetIndex] >0 then															-- subForm=evaluated during "createwidgetfield" ; check if formlines do exist
 		for index = 1, #widget.subForm[widgetIndex] do													-- browse through lines
-			local value = widget.subConf[widgetIndex][index]
 
-			widget.subForm[widgetIndex][index][3] = value					-- set cached value 
-	
+			widget.subForm[widgetIndex][index][3] = widget.subConf[widgetIndex][index]					-- set cached value 
+
 			paraSub 	= widget.subForm[widgetIndex][index]											-- get subform line [appEntryNum][corresp.SubFormLine][SubFormLine.Item]
 			if not pcall(function() paraSub[3] = widget.subConf[widgetIndex][index]  end ) then			-- value "injection" into paraSub[3]
 				print("ERROR Config injection")
 				paraSub[3] 	= nil
 			end
-			if paraSub[3] == nil then				-- on 1st built, no value set, so default
-					print ("---- subVal empty, default:",widget.subForm[widgetIndex][index].default)
-					paraSub[3] = widget.subForm[widgetIndex][index].default
-			end				
+
 			local line = form.addLine("   " .. paraSub[1])												-- get line label
 			local tmp=paraSub[2]																		-- type to create
 			field = paraSub[2](line, paraSub) 															-- finally, create field
 			if debug8 then print("  648       create appIdx, index,subField,val ", widgetIndex, index,line) end
-			fields[#fields + 1] = field		
-			print("880 found",paraSub[3] )			
+			fields[#fields + 1] = field			
 		end
 	else
 		print("             found empty slot during subForm Built, no subItems defined in widget # "..widgetIndex)
@@ -989,7 +962,6 @@ local function createSubWidgetField(line, parameter,widget,configIndex,widgetInd
 						
 						-- built "select subApp" line
 						local value = parameter[3]													-- actual / new SubApp selection
-				
 						line = form.addLine(parameter[1])											-- >> line label	
 --						print("******************  recursive create",parameter[1],parameter[3])
 						local field = createSubWidgetField(line, parameter,widget,formLine,tmp_widgetIndex)	-- create main app formline//  Choice-line including functions to refresh form in case of set new "item";  offset because of header items (=1)
@@ -1349,10 +1321,6 @@ local function create()
 	  
 	param[TOPLINE]["TOP_SafetyTime"] = 0
 	
-	local timer ={								-- timer for cyclic events
-					garbage 	= os.clock(),
-		}
-	
 	local enable = {
 		left = true,
 		right = true
@@ -1389,7 +1357,6 @@ local function create()
 		layoutApp 	 = layoutApp,
 		param		 = param,
 		com			 = com,						-- commmunication variables between "background" tasks // wakeup calls
-		timer		 = timer,
 		}
 end
 
@@ -1452,29 +1419,21 @@ local function frontendConfigure(widget)
 	--]]	
 		widget.theme = initTheme(evalTheme(widget))												-- ensure theme change will be activated
 
-		local start = 2																			-- AppIndex 1= TopBar; index 2 = App01L
+		local start = 2
 		if TOP_MODE then start = 1 end
 
-		--dumpConf(widget)
-		
 		-- load selected apps / subWidgets (configuration in file "_conf"); #loops = #widgets:
 		for i=start,NumAPPS+1 do
-
-			local label = ""
-			if pcall(function() label = widgetAssignment[widArray[i] ].label return end ) then
-				if  widgetAssignment[widArray[i] ].label ~= "EMPTY" then							-- pcall OK >> persistent data, so check for app
-					loadApp(widget.wpath.. widgetAssignment[widArray[i] ].File)
-				--	loaded_chunk = assert(loadfile(widget.wpath.. widgetAssignment[widArray[i] ].File ))
-				--	loaded_chunk()
-				--[[		
-						local fLen = string.len(file)
-						file = string.sub(file,1,fLen-4)
-						require(widget.wpath.. file)
-				--]]	   
-				end
-			else																					-- pcall fail >> very first widget run, init ...
-				local appIndex = (widArray[i]-1)/10
-				assignEmpty(widget,appIndex)
+			if  widgetAssignment[widArray[i] ].label ~= "EMPTY" then
+				loadApp(widget.wpath.. widgetAssignment[widArray[i] ].File)
+			--	loaded_chunk = assert(loadfile(widget.wpath.. widgetAssignment[widArray[i] ].File ))
+		--[[		
+				local fLen = string.len(file)
+				file = string.sub(file,1,fLen-4)
+				require(widget.wpath.. file)
+		--]]	   
+--				print("main 1290: load widgetfile",widget.wpath.. widgetAssignment[widArray[i] ].File )
+			--	loaded_chunk()
 			end
 		end
 
@@ -1501,8 +1460,6 @@ local function frontendConfigure(widget)
 		widget.touch.Y = nil
 		
 		initLayout(widget)
-		
-		collectgarbage("collect")																-- housekeeping after init
 
 		return(true)	
 	else
@@ -1608,11 +1565,11 @@ local function paint(widget)
 			w_right(widget)
 			--print("**********   mode",WIDGET_MODE,TOP_MODE)
 		end
-		
+--[[		
 		if TOP_MODE then
 			w_top(widget)
 		end
-		
+--]]		
 		resetEvnt(widget)													-- delete event stati not needed	
 	end
 end
@@ -1711,8 +1668,6 @@ end
 local function backGround(widget)
 	local start = OFFSET + TOP_OFFSET
 	local search = "label"																					-- set search flag for sefApplist
-	
-
 
 	for i = start,start+NumAPPS	do																			-- determine which apps are configured & call corresponding background tasks
 		if 	widget.conf[i][3] == defApplist("Model Finder",search,nil) then 	
@@ -1737,12 +1692,6 @@ end
 																				-- ************************************************
 
 local function wakeup(widget)
-
-	if os.clock() > widget.timer.garbage + 5 then																-- housekeeping every x seconds
-		widget.timer.garbage = os.clock()
-		collectgarbage("collect")	
-	end
-	
 	if PERFMON then
 		PM_t_start 					= os.clock()					-- handler start time
 		PM_array[PM_pointer] 		= PM_t_start - PM_last_start 	-- store interval time
@@ -1880,8 +1829,6 @@ local function read(widget)
 		 reAssignWidgets(configIndex,appUID,widget)										-- assign subApp 
 	end
 	
-	
-	
 	local index
 	--************************	
 	--   read app specific formlines
@@ -1907,7 +1854,6 @@ local function read(widget)
 					-- local readVal = widget.subForm[index][indx2][3]
 
 					if readVal == nil then
-						if debugConf then print("read was nil; SO DEFAULT	",widget.subForm[index][indx2].default) end
 						readVal = widget.subForm[index][indx2].default
 					end
 
@@ -1968,8 +1914,7 @@ local function write(widget)
 				if subItem ~= nil then
 					value = widget.subForm[index][indx2][3]	
 					if value == nil then 										-- write dummy in case no subform items
-						--value = "no subItem" 
-						value = widget.subForm[index][indx2]
+						value = "no subItem" 
 					end
 					-- if debugConf then print("writeSub",index, subItem, value) end																	 
 					if debugConf then print("   subconf Val",index,indx2,widget.subConf[index][indx2], "Val:",value) end
