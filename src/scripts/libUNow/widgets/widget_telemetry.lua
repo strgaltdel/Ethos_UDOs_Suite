@@ -1,19 +1,15 @@
 -- future enhancements:
 -- dynamic calculation of num pages & rows per page 
 
--- **************************************************************************************
--- *************************    unspecific Tele draw functions **************************
--- **************************************************************************************
-
-	
 
 local layout_T01 	= {}
 local pageLayout	= {}
 local dspType 
 	
-	
+local sensors = {}	
+
 ---------------
--- Define config string
+-- Define config string (read some configs, which are written during runtime, from file)
 ---------------
 --[[ future use, maybe
 function conf_teleEl()
@@ -23,8 +19,8 @@ end
 
 
 
-
-function timer2strg(value)										-- convert timer value to string
+																	-- convert timer value into string hh:mm:ss
+function timer2strg(value)										
 	local hour 		= math.floor(value/3600)
 	local minute 	= math.floor((value-hour*3600)/60)
 	local second	= value -hour*3600 -minute*60
@@ -36,6 +32,7 @@ function timer2strg(value)										-- convert timer value to string
 	local valueStrg = hour .. ":" .. minute .. ":" .. second
 	return valueStrg
 end
+
 
 function timer2strg2(value)										-- convert timer value to string  (short version without hour)
 	local hour 		= math.floor(value/3600)
@@ -49,6 +46,12 @@ function timer2strg2(value)										-- convert timer value to string  (short ve
 	local valueStrg = minute .. ":" .. second
 	return valueStrg
 end
+
+
+
+
+
+
 
 function displayTele(label,sensor,x,y,iconsize,frameX,theme,dy,layout,layout_T01,bmpDraw,demoMode)					-- display telemetry values; sizing in standard 2x4 arrangement (2 cols / 4 rows)
 
@@ -75,18 +78,23 @@ function displayTele(label,sensor,x,y,iconsize,frameX,theme,dy,layout,layout_T01
 	end
 	local xB_offset = tmpOffset+sensor.alignB*frameX.w/1000
 	local xV_offset = layout_T01.offTele1+tmpOffset+sensor.alignV*frameX.w/1000
--- ***************************   exception handling **********************************************
+	
+	
+																								-- **********************************************************************************************	
+																								-- ***************************   exception handling **********************************************
 
-	if sensor.xh == true then											-- exception handler ?																		--******   GPS   *********	
-			if label == "GPS+" or label == "GPS" then
+	if sensor.xh == true then		
+																									-- **************************		
+			if label == "GPS+" or label == "GPS" then												-- ******   GPS     *********	
+																									-- **************************				
 				local value2,valHdop,valnSat,value2Strg
 				--print("GPS detected")
-				y = y + (frameX.h * 0.012)	+ 8							-- corrective y-placement
+				y = y + (frameX.h * 0.012)	+ 8																		-- corrective y-placement
 				if bmpDraw and sensor.bmp ~= nil then
 					frame.drawBitmapNative(x,  y,  sensor.bmp,  frameX)
 				end
 				
-				if demoMode == true then												-- demo mode ?
+				if demoMode == true then							-- demo mode ?
 						value 	= sensors["gpsLat"].testVal				-- lat
 						value2 	= sensors["gpsLon"].testVal				-- lon
 						valnSat = sensors.nSat.testVal					-- nSat
@@ -96,12 +104,12 @@ function displayTele(label,sensor,x,y,iconsize,frameX,theme,dy,layout,layout_T01
 						value 	= getTele(sensors["gpsLat"].name,sensors["gpsLat"].options)
 						value2	= getTele(sensors["gpsLon"].name,sensors["gpsLon"].options)
 						
-						if label == "GPS+" then											-- GPS additional data
+						if label == "GPS+" then																		-- GPS additional data
 							valnSat = getTele(sensors["nSat"].name)
 							valHdop = getTele(sensors["HDOP"].name)
 							if valnSat == false then valnSat = 0 end
 							if valHdop == false then valHdop = 0 end					
-							print("valsat",valnSat)
+							--print("valsat",valnSat)
 							if valnSat > 100 then valnSat = valnSat-100 end
 
 						end
@@ -109,7 +117,7 @@ function displayTele(label,sensor,x,y,iconsize,frameX,theme,dy,layout,layout_T01
 				end
 				
 				-- gps coordinates
-				valueStrg  = string.format("%." .. sensor.dec .. "f",value)				-- format decimals
+				valueStrg  = string.format("%." .. sensor.dec .. "f",value)											-- format decimals
 				value2Strg = string.format("%." .. sensor.dec .. "f",value2)
 				frame.drawText(89, y+0,  		valueStrg,  RIGHT ,  frameX)
 				frame.drawText(89, y+0+dy*0.7, 	value2Strg, RIGHT ,  frameX)
@@ -117,7 +125,7 @@ function displayTele(label,sensor,x,y,iconsize,frameX,theme,dy,layout,layout_T01
 				-- nsat & hdop
 				if label == "GPS+" then	
 					lcd.font(txtSize.sml)
-					valueStrg  = string.format("%." .. sensors.nSat.dec .. "f",valnSat)	-- format decimals
+					valueStrg  = string.format("%." .. sensors.nSat.dec .. "f",valnSat)								-- format decimals
 					value2Strg = string.format("%." .. sensors.HDOP.dec .. "f",valHdop)
 				
 					local xTxt = 48					-- tab for additional data
@@ -132,9 +140,9 @@ function displayTele(label,sensor,x,y,iconsize,frameX,theme,dy,layout,layout_T01
 			
 
 															
-																												-- **************************																												
-			elseif 	string.sub(label,1,5) == "Timer" then														-- ******   Timer   *********
-																												-- **************************
+																									-- **************************																												
+			elseif 	string.sub(label,1,5) == "Timer" then											-- ******   Timer   *********
+																									-- **************************
 				if label == "TimerX12" then
 					local value2 
 					local value2Strg
@@ -144,11 +152,11 @@ function displayTele(label,sensor,x,y,iconsize,frameX,theme,dy,layout,layout_T01
 					else
 						value 		= model.getTimer(0):value()
 						valueStrg 	= timer2strg2(value)	
-						print("T1",valueStrg )
+						--print("T1",valueStrg )
 							
 						value2 		= model.getTimer(1):value()
 						value2Strg 	= timer2strg2(value2)	
-						print("T2",value2Strg )
+						--print("T2",value2Strg )
 					end
 					
 					if valueStrg 	~= "" then frame.drawText(x+iconsize.width+xV_offset, y+2,  		valueStrg, RIGHT ,  frameX) end		-- timer1
@@ -181,9 +189,9 @@ function displayTele(label,sensor,x,y,iconsize,frameX,theme,dy,layout,layout_T01
 					end
 					frame.drawText(x+iconsize.width+xV_offset, y+2,  valueStrg, RIGHT ,  frameX)
 				end
-																												-- **************************
-			elseif 	label == "TxBt" then																		-- ******   Txbat   *********	
-																												-- **************************
+																									-- **************************
+			elseif 	label == "TxBt" then															-- ******   Txbat   *********	
+																									-- **************************
 				if bmpDraw and sensor.bmp ~= nil then	
 					frame.drawBitmapNative(x+sensor.alignB*frameX.w/1000,  y+bmpY,  sensor.bmp,  frameX)		-- bmp
 				end
@@ -202,8 +210,11 @@ function displayTele(label,sensor,x,y,iconsize,frameX,theme,dy,layout,layout_T01
 				lcd.color(theme.c_textgrey1)
 				frame.drawText(x+iconsize.width+xV_offset, y+2+y_font,  tUnit, LEFT ,  frameX)
 			end
--- ***************************   standard handling **********************************************		
-		
+			
+			
+																			-- **********************************************************************************************
+																			-- ***************************   standard handling **********************************************		
+																			-- **********************************************************************************************		
 	else
 	
 		if bmpDraw and sensor.bmp ~= nil then	
@@ -232,6 +243,9 @@ function displayTele(label,sensor,x,y,iconsize,frameX,theme,dy,layout,layout_T01
 end
 
 
+-- *********************************************************
+-- ****	shrink global sensor list to sensors requested	****
+-- *********************************************************
 local function getActiveSensors(pageLayout,display)
 	local page
 	local line
@@ -245,28 +259,26 @@ local function getActiveSensors(pageLayout,display)
 		"X18/"
 		}
 		
-	print("DISP",display)
+
 	sensorsCat 	= defineSensors()				-- read complete sensor catalog
 	
 	local sensorsTmp	= {}
 	for page = 1,#pageLayout do
 		for line = 2,#pageLayout[page] do		-- offset 1 for header !
 			if pageLayout[page][line][1] ~= nil then
-				entry_a = pageLayout[page][line][1]
+				entry_a = pageLayout[page][line][1]		-- "left column" sensor 
 			end
 			if pageLayout[page][line][2] ~= nil then
-				entry_b = pageLayout[page][line][2]
+				entry_b = pageLayout[page][line][2]		-- "right column" sensor 
 			end
 			
-			print("got entries",entry_a,entry_b)		
+			--print("got entries",entry_a,entry_b)		
 			sensorsTmp[entry_a] 	= sensorsCat[entry_a]		-- get 1st col sensor		
 			sensorsTmp[entry_b] 	= sensorsCat[entry_b]		-- get 2nd col sensor
-			print("readA",sensorsTmp[entry_a].name)
+			--print("readA",sensorsTmp[entry_a].name)
 			sensorsTmp[entry_a].bmp = lcd.loadBitmap(sensorsCat[entry_a].path .. pathLookup[display] .. sensorsCat[entry_a].icon)	
---			sensors[entry_a].bmp = lcd.loadBitmap(sensorsCat[entry_a].path .. pathLookup[display] .. sensorsCat[entry_a].icon)
-			print("readB",sensorsTmp[entry_b].name)
+			--print("readB",sensorsTmp[entry_b].name)
 			sensorsTmp[entry_b].bmp = lcd.loadBitmap(sensorsCat[entry_b].path .. pathLookup[display] .. sensorsCat[entry_b].icon)			
---			sensors[entry_b].bmp = lcd.loadBitmap(sensorsCat[entry_b].path .. pathLookup[display] .. sensorsCat[entry_b].icon)
 			
 			if string.sub(entry_a,1,3) == "GPS" or string.sub(entry_a,1,3) == "GPS" then		-- exception GPS >> get sub entries too
 				sensorsTmp["gpsLat"] = sensorsCat["gpsLat"]
@@ -316,6 +328,10 @@ function tele_frontendConfigure(widget,sensorSet)
 end
 
 
+
+-- *****************************
+-- ****	layout definition	****
+-- *****************************
 local function rowLayout(rows,dy,Yoffset)
 	local Yline  = {}	
 --	print("Y Layout:" ,rows)
@@ -339,14 +355,16 @@ end
 
 
 
+
+
 -- **************************************************************************************
 -- *************************      specific Tele draw functions **************************
 -- **************************************************************************************
 
 
-function main_telemetry(frameX,page,layout,theme,touch,evnt,subConf,appConfigured,txt,widget)
+function main_telemetry(frameX,page,layout,theme,touch,evnt,subConf,appConfigured,txt,widget,com)
 	--print("garbage mem count returns",collectgarbage("count"))
-	local bmpDraw = true									-- for further use, if masks would be supported
+	local bmpDraw = true									-- for further use
 	--[[	
 	if widget.tele01upd == nil then
 		widget.tele01upd = os.clock()
@@ -367,8 +385,7 @@ function main_telemetry(frameX,page,layout,theme,touch,evnt,subConf,appConfigure
 	local xx,yy
 	local Yoffset = frameX.h * 0.04
 	local bmpSize <const> = 12	
---	local bmpSize <const> = 13
-	--local number_rows = {4,4,4}	
+
 	local number_rows = {}					-- define number of rows per page
 	local Yline = {}						-- 
 
@@ -378,15 +395,12 @@ function main_telemetry(frameX,page,layout,theme,touch,evnt,subConf,appConfigure
 													-- one time config; cant be executed during create cause window size not availabe then
 	if not(appConfigured) then	
 		-- ***************************    "init"       *********************************************************
-		for i = 1,#subConf do
-		print("//////   MF conf passed:",i,subConf[i])
-		end
+		--for i = 1,#subConf do			-- no subconf here
+		--end
 		dspType = evaluate_display()											-- kind of display
 		appConfigured,sensors,pageLayout 		= tele_frontendConfigure(widget,sensorSet)			-- call one time function
 		
 		layout_T01 					= defineLayout(dspType)						-- app specific tabs etc...
-
-		 
 	end	
 	
 		if page > #pageLayout then 
@@ -421,14 +435,13 @@ function main_telemetry(frameX,page,layout,theme,touch,evnt,subConf,appConfigure
 		for row = 0,number_rows[page]-1 do
 	--		local dx = 100 / number_cols
 			local dx = 50
-			--if dx == 50 then dx=55 end										-- layout corrective in x axis
+			--if dx == 50 then dx=55 end										-- layout corrective x axis
 			
-			if not(pageLayout[page][row+2][col+1] == nil) then				-- there is a telemetry value configured in layout
-				local tmp = pageLayout[page][row+2][col+1]					-- get "internal" telemetry label
-				--print("tmp",tmp)
-				--print("name",sensors[tmp].name)
+			if not(pageLayout[page][row+2][col+1] == nil) then					-- there is a telemetry value configured in layout
+			
+				local tmp = pageLayout[page][row+2][col+1]						-- get "internal" telemetry label
 				local sensorTmp=sensors[tmp]									-- get sensor structure (label, bitmap etc..), defined by  defineSensors(widget) in sensorlist.lua
---				displayTele(tmp,sensorTmp,dx*col, Yline[dspType][row+1], iconsize, frameX,theme, dy,layout,layout_T01,sensors)
+
 				displayTele(tmp,sensorTmp,dx*col, Yline[dspType][row+1], iconsize, frameX,theme, dy,layout,layout_T01,bmpDraw,demoMode)
 			end
 		end

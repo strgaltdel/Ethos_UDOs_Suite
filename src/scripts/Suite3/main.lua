@@ -1471,7 +1471,7 @@ local function create()
 		language 	 = language,
 		layout 	 	 = layout,
 		param		 = param,
-		com			 = com,						-- commmunication variables between "background" tasks // wakeup calls
+		com			 = com,						-- "commmunication" variables between "background" tasks // wakeup calls
 		timer		 = timer,
 		}
 end
@@ -1498,7 +1498,7 @@ local function frontendConfigure(widget)
 			}
 		frameRight = {																	-- frame layouts: for compatibility reasons, only "left" is declared
 			name= "right",																-- name
-			x = widget.w*0.5,																		-- x-position
+			x = widget.w*(0.5+(0.5-widgetWidth)/2),																		-- x-position
 			y = (topBarHeight+blank)*widget.h,														-- y-position (abs)
 			w = widget.w*widgetWidth,																-- width
 			h = widget.h*widgetHeight																-- height

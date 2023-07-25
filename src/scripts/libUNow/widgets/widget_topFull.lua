@@ -59,7 +59,7 @@ function topfull(frameX,page,dummy,theme,touch,evnt,subConf,appConfigured,appTxt
 	
 	
 	
-	print("*********   para Topfull",subConf[1],subConf[2])
+--	print("*********   para Topfull",subConf[1],subConf[2])
 --	if pcall(sensors["VFR"].name) then
 --	else
 --		sensors["VFR"].bmp = lcd.loadBitmap(sensors["VFR"].path .. "X20/" .. sensors["VFR"].icon)			

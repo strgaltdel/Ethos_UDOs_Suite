@@ -13,8 +13,8 @@ function defineSensors(widget)
 	local frpPath = "/scripts/libUNow/freepic/"
 	
 	local sensors = {
-  --  internal label	Ethos label/name  			icon filename				bitmap path,		Option Params,	  		Fieldlenght, decimals, alignV,  		alignB,		except.handle,	testvalue	
-  
+  --  internal label	Ethos label/name  			icon filename				bitmap path,		Option Params,	  			Fieldlenght, decimals, alignV,  		alignB,	except.handle,	testvalue	
+  --																																				icon vert		icon horiz.
 		-- Tx
 		["TxBt"] 	= 	{name = "TxBt", 			icon = ("Batt3.png"),		path=bmpPath,		options = nil,				f_lenght=5,	dec=1,	alignV=-20,		alignB=5,	xh=true,	testVal = 8.8 ,		testUnit = "V"},		
 		
@@ -45,8 +45,8 @@ function defineSensors(widget)
 		["EscV"]	= 	{name = "ESC Voltage",	 	icon = ("LipoU.png"),		path=frpPath,		options =  nil,				f_lenght=5,	dec=1,	alignV=-4,		alignB=0,	xh=false,	testVal = 16.1,		testUnit = "V" },
 		["EscT"]	= 	{name = "ESC Temp", 		icon = ("thermo3.png"),		path=frpPath,		options =  nil,				f_lenght=5,	dec=0,	alignV=-17,		alignB=0,	xh=false,	testVal = 50.3,		testUnit = "Cel" },
 		["Erpm"]	= 	{name = "ESC RPM", 			icon = ("Prop.png"),		path=frpPath,		options =  nil,				f_lenght=5,	dec=0,	alignV=1,		alignB=0,	xh=false,	testVal = 4280,		testUnit = "" },
-		["ECon"]	= 	{name = "ESC Consumption", 	icon = ("Batt3.png"),		path=bmpPath,		options =  nil,				f_lenght=5,	dec=0,	alignV=1,		alignB=0,	xh=false,	testVal = 1850,		testUnit = "mAh" },		
-		["CConN"]	= 	{name = "Consumption",		icon = ("Cap1.png"),		path=frpPath,		options =  nil,				f_lenght=5,	dec=0,	alignV=1,		alignB=0,	xh=false,	testVal = 1850,		testUnit = "mAh" },
+		["ECon"]	= 	{name = "ESC Consumption", 	icon = ("Batt3.png"),		path=bmpPath,		options =  nil,				f_lenght=5,	dec=0,	alignV=1,		alignB=0,	xh=false,	testVal = 1850,		testUnit = "mA" },		
+		["CConN"]	= 	{name = "Consumption",		icon = ("Cap1.png"),		path=frpPath,		options =  nil,				f_lenght=5,	dec=0,	alignV=1,		alignB=0,	xh=false,	testVal = 1850,		testUnit = "mA" },
 		["LiPo"]	= 	{name = "LiPo",	 			icon = ("LipoU.png"),		path=frpPath,		options =  nil,				f_lenght=5,	dec=1,	alignV= midi,	alignB=0,	xh=false,	testVal = 16.1,		testUnit = "V" },
 			-- YGE autodetect
 		["VFAS"]	= 	{name = "VFAS", 			icon = ("LipoU.png"),		path=frpPath,		options =  nil,				f_lenght=5,	dec=1,	alignV=-4,		alignB=0,	xh=false,	testVal = 16.1,		testUnit = "V" },
@@ -54,7 +54,7 @@ function defineSensors(widget)
 		["BecA"]	= 	{name = "BecA", 			icon = ("BatBecI.png"),		path=frpPath,		options =  nil,				f_lenght=5,	dec=1,	alignV=-10,		alignB=5,	xh=false,	testVal = 0.45,		testUnit = "mA" },
 		["BecV"]	= 	{name = "VBEC", 			icon = ("BatBecV.png"),		path=frpPath,		options =  nil,				f_lenght=5,	dec=1,	alignV=-10,		alignB=5,	xh=false,	testVal = 5.67,		testUnit = "V" },
 		["EscTmp"]	= 	{name = "GASS Temp1", 		icon = ("thermo2.png"),		path=frpPath,		options =  nil,				f_lenght=5,	dec=0,	alignV=-17,		alignB=0,	xh=false,	testVal = 50.3,		testUnit = "Cel" },
-		["CconY"]	= 	{name = "Ccon", 			icon = ("BatBecV.png"),		path=frpPath,		options =  nil,				f_lenght=5,	dec=0,	alignV=1,		alignB=0,	xh=false,	testVal = 1850,		testUnit = "mAh" },
+		["CconY"]	= 	{name = "Ccon", 			icon = ("BatBecV.png"),		path=frpPath,		options =  nil,				f_lenght=5,	dec=0,	alignV=1,		alignB=0,	xh=false,	testVal = 1850,		testUnit = "mA" },
 		["RPM"]		= 	{name = "RPM", 				icon = ("Prop.png"),		path=frpPath,		options =  nil,				f_lenght=5,	dec=0,	alignV=1,		alignB=0,	xh=false,	testVal = 4280,		testUnit = "" },
 		["Temp1"]	= 	{name = "Temp1",			icon = ("thermo3.png"),		path=frpPath,		options =  nil,				f_lenght=5,	dec=0,	alignV=-17,		alignB=0,	xh=false,	testVal = 50.3,		testUnit = "Cel" },
 		["Curr"]	= 	{name = "Curr", 			icon = ("currB1.png"),		path=bmpPath,		options =  nil,				f_lenght=5,	dec=1,	alignV=0,		alignB=0,	xh=false,	testVal = 40.3,		testUnit = "A" },

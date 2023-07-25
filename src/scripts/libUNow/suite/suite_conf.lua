@@ -394,13 +394,13 @@ function getFrameSizing(WIDGET_MODE,TOPBAR_WID,Dual_WID)
 				topBarHeight 	= 0.1
 				blank 			= 0.05
 				widgetHeight 	= 1-blank-topBarHeight
-				widgetWidth		= 0.48	
+				widgetWidth		= 0.485	
 	
 	elseif	WIDGET_MODE == Dual_WID then		-- dual frame & Ethos topBar
 				topBarHeight 	= 0
 				blank 			= 0.0
 				widgetHeight 	= 1				-- 1 = 100%
-				widgetWidth		= 0.48		
+				widgetWidth		= 0.485		
 	
 	else										-- single frame	
 				topBarHeight 	= 0

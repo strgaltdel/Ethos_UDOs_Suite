@@ -37,22 +37,28 @@
 -- Revisions
 -- 1.0	initial test roll out
 -- 1.1	try to avoid multiple lib loads (require won't work !)
--- 1.2  2023 april..july
---		supports topBar frame  
---		adopted for 3 frames / fullscreen support (bad performance scaling of running multiple lua widgets on a "heavy" model template, so create "one 4 all")
+-- 1.2  2023 August
+--		major switch to one codebase for single / dual / dual&topbar application
+--		support of topBar frames  
+--		choice of multiple topbars including parameters
+--		layout variant adopted for 3 frames / fullscreen support (bad performance scaling of running multiple lua widgets on a "heavy" model template, so create "one 4 all")
+--		enable widget dependent background handler
+--		support of default app-config parameters
 --		minor optimization of the data model
---		config now stores appIndex directly, not ListIndex of app
+--		some performance optimization
+--		config handler now stores appIndex directly, not ListIndex of app
 -- 		solved bug in case user starts with app02 and leaves app01-slot empty
 --		some optimization of data persistence
 --		delete older remark & debug lines
---		major switch to one codebase for single / dual / dual&topbar application
 --		some index rework
---		enable widget dependent background handler
+
+
+
 
 --		to do:  
---					flexible background function call
---					check single codebase usage
+--					topbar full: exchange fixed lsw# vs name
 --					delete unn. prints
+
 
 --		finished
 --					index failure on app deletion, 
@@ -63,7 +69,15 @@
 --					no app, only top defined >> error
 --					no topBar refresh
 --					more index rework
-
+--					check single codebase usage
+--					predef standard values for widgets
+--					TEXT const for topBar / snapfl.. timer ..
+--					consolidate topBar libs
+--					garbage collection
+--					after very 1st config restart needed		>> 1438 attempt to indexnil value
+--					handle neg timers
+--					parametric background function call
+--					modelfind save/load routines
 
 -- **************************************************************************************************
 -- suite "event-handler range" Feb 2023
@@ -75,7 +89,7 @@
 -- announce            520          540                   ??? under construction
 -- teleEl	                                                ??? under construction
 -- picture	                   not used
--- setCurve                  not used
+-- setCurve                  	not used
 -- **************************************************************************************************
 
 
@@ -131,18 +145,26 @@
  
  ]]
 
- local PERFMON <const> = true
+ local PERFMON <const> = false					-- true = activate performance measurements
+  
+ local SINGLE_WID <const>	 = 1
+ local Dual_WID <const>		 = 2
+ local TOPBAR_WID <const>	 = 3
+												-- defines global "management" mode of this "wrapper":
+ --local WIDGET_MODE <const>	 = Dual_WID
+ local WIDGET_MODE <const>	 = TOPBAR_WID
+											--		1 = single frame (e.g. half area of the screen)
+											--		2 = two frames within one ethos widget, e.g. fullscreen with/without TOPLINE
+											--		3 = two frames AND an individual topline , Ethos 100% fullscreen  
   
   
-  
- local SuiteMODE <const>	= 2				-- Mode definition:  1= single frame;  2= dual frame w/o topbar;  3= dual frame & topBar
  local KEY 					= ""			-- Mode dependent Widget key (used by init)
  local NAME					= ""			-- Mode dependent Widget name
  
- if 	SuiteMODE == 1 then
+ if 	WIDGET_MODE == 1 then
 		KEY  = "unowS1"
 		NAME = "Udos Suite 1"
- elseif	SuiteMODE == 2 then
+ elseif	WIDGET_MODE == 2 then
  		KEY  = "unowS2"
 		NAME = "Udos Suite 2"
  else
@@ -154,17 +176,10 @@
   
   
  local OFFSET <const> 		= 1			-- # config -header items in widget configuration: only one (theme)
- local NumAPPS <const>  	= 6
+ local NumAPPS <const>  	= 6			-- max number of apps, excluding topbar
  
  
- local SINGLE_WID <const>	 = 1
- local Dual_WID <const>		 = 2
- local TOPBAR_WID <const>	 = 3
- 
- local WIDGET_MODE <const>	 = Dual_WID	-- defines global "management" mode of this "wrapper":
-										--		1 = single frame (e.g. half area of the screen)
-										--		2 = two frames within one ethos widget, e.g. fullscreen with/without TOPLINE
-										--		3 = two frames AND an individual topline , Ethos 100% fullscreen 
+
 
   local MULTI 		= false
   local TOP_MODE 	= false
@@ -195,8 +210,8 @@
  local debug6 	= false			-- handler
  local debug7 	= false			-- print demoMode
  local debug8	= false			-- FormBuilt
- local debugConf= false			-- write/read config
- local debugReas= false			-- reassign new params/config to widget
+ local debugConf= true			-- write/read config
+ local debugReas= true			-- reassign new params/config to widget
  local debugLay = false			-- print layout array parameter
  
  -- perfmonitor
@@ -226,7 +241,7 @@ local widgetList 		= {}
 local sensors = {}
 local param 			= {}	-- only used in topbar / safety widget as global var
 
-local wpath = "/scripts/Tools1/"
+--!!local wpath = "/scripts/Tools1/"
 local suitePath = "/scripts/libUNow/suite/"
 
 local initAppConfig = false					-- flag config has changed, so init apps 
@@ -234,12 +249,15 @@ local tmpSrc = nil
 
 -- globals:
 -- handler (don't change)
-local TOPLINE <const>		= 90			-- (no handler neccessary)
+local TOPLINE <const>		= 7			-- (no handler neccessary)
+local TOPLINEslot  <const>  = 71
+
 local LEFT_1  <const>  		= 1
 local TOP_1   <const>		= 11
 local CENTER_1 <const>  	= 21
 local BOTTOM_1 <const> 		= 31
 local RIGHT_1   <const>		= 2
+
 
 local LEFT_2  <const>  		= 3
 local TOP_2   <const>		= 41
@@ -260,10 +278,11 @@ local ModelFINDER <const> 	= 4
 
 local NUMWIDGETS <const> 	= 3				-- number of widgets
 local THEMEidx <const>		= 1				-- theme is defined in formline # THEMEidx
+--local TopBarINDEX <const>	= 91			-- app/WidgetIndex for Topbar, e.g. used in widget.subform[widgetindex]
 local APPIndexNil <const>	= 98			-- represent no configured app in slot
 
 -- seq. list of widget handler (needed for loops)
-local widArray = {TOPLINE, TOP_1,CENTER_1 ,BOTTOM_1,TOP_2,CENTER_2 ,BOTTOM_2 }
+local widArray = {TOPLINEslot, TOP_1,CENTER_1 ,BOTTOM_1,TOP_2,CENTER_2 ,BOTTOM_2 }
 
 -- appIndex left  1-3:		1..3 (automated calc in loops)
 -- appIndex right 1-3:		4..6 (automated calc in loops)
@@ -351,13 +370,19 @@ local function dumpSubConf(widget)
 			print("dump appConf  appIndex, item, value"," ",appIndex,item,widget.subConf[appIndex][item])
 		end
 	end
-
+	
+	if WIDGET_MODE == TOPBAR_WID then
+		
+		for item = 1,#widget.subForm[TOPLINE] do		-- loop FormLines per app
+			print("dump appConf  appIndex, item, value"," ",TOPLINE,item,widget.subConf[TOPLINE][item])
+		end
+	end
 
 end
 
 local function dumpConf(widget)
-	dumpHeaderConf(widget)
-	dumpSubConf(widget)
+--	dumpHeaderConf(widget)
+--	dumpSubConf(widget)
 end
 
 
@@ -409,7 +434,7 @@ local function assignLayout(widget)
 	if debugLay then
 		dumplayout(TOPLINE,widget,subCnfOffset)
 	end
-
+	local idx = 71
 	if not pcall(function() 
 						local lookup = defApplist()
 						-- *******************************                         assign all selected widgets to corresponding frames (top,left,right) incl.parameters                                                                       ***************************		
@@ -417,13 +442,14 @@ local function assignLayout(widget)
 							-- call widget specific function from global namespace  			
 				--			[appSlot]				= {func = function(frame,page) >> call     functionName							(frame,page,widget.layout 		.... end, maxpage = 1},				--  [*_1] = frame-left: list of "widgets"
 
-							[TOPLINE]				= {func = function(frame,page)	return(_G[widgetAssignment[TOPLINE].mainfunc](frame,page,	widget.layout,widget.theme,widget.touch,widget.evnt,	widget.appConfigured[TOPLINE],	widget.appTxt[TOPLINE],		widget,sensors,widget.param[TOPLINE]																																))	end, maxpage = 1},		-- call widget specific function from globa
+							[idx]				= {func = function(frame,page)	return(_G[widgetAssignment[idx].mainfunc](frame,page,	widget.layout,widget.theme,widget.touch,widget.evnt,	widget.appConfigured[idx],	widget.appTxt[idx],		widget,sensors,widget.param[idx]																																))	end, maxpage = 1},		-- call widget specific function from globa
+
 							}
 							
 						if widget.actualWidget.left.typ > 10 then			-- check if there is a "startwidget" evaluated
-							layout[TOP_1] 			= {func = function(frame,page)	return(_G[widgetAssignment[TOP_1   ].mainfunc](frame,page, 	widget.layout,widget.theme,widget.touch,widget.evnt,	widget.subConf[widget.widgetSelect["left"].selected],				widget.appConfigured[TOP_1],	widget.appTxt[TOP_1],		widget, widget.conf[widget.widgetSelect["left"].selected+OFFSET][3]	))	end, maxpage = widgetAssignment[TOP_1   ].maxpage}
-							layout[CENTER_1]		= {func = function(frame,page)	return(_G[widgetAssignment[CENTER_1].mainfunc](frame,page,	widget.layout,widget.theme,widget.touch,widget.evnt,	widget.subConf[widget.widgetSelect["left"].selected],				widget.appConfigured[CENTER_1],	widget.appTxt[CENTER_1],	widget, widget.conf[widget.widgetSelect["left"].selected+OFFSET][3]	))	end, maxpage = widgetAssignment[CENTER_1].maxpage}
-							layout[BOTTOM_1]		= {func = function(frame,page)	return(_G[widgetAssignment[BOTTOM_1].mainfunc](frame,page,	widget.layout,widget.theme,widget.touch,widget.evnt,	widget.subConf[widget.widgetSelect["left"].selected],				widget.appConfigured[BOTTOM_1],	widget.appTxt[BOTTOM_1],	widget, widget.conf[widget.widgetSelect["left"].selected+OFFSET][3]	))	end, maxpage = widgetAssignment[BOTTOM_1].maxpage}
+							layout[TOP_1] 			= {func = function(frame,page)	return(_G[widgetAssignment[TOP_1   ].mainfunc]	(frame,page, 	widget.layout,widget.theme,widget.touch,widget.evnt,	widget.subConf[widget.widgetSelect["left"].selected],				widget.appConfigured[TOP_1],	widget.appTxt[TOP_1],		widget, widget.conf[widget.widgetSelect["left"].selected+OFFSET][3]	))	end, maxpage = widgetAssignment[TOP_1   ].maxpage}
+							layout[CENTER_1]		= {func = function(frame,page)	return(_G[widgetAssignment[CENTER_1].mainfunc]	(frame,page,	widget.layout,widget.theme,widget.touch,widget.evnt,	widget.subConf[widget.widgetSelect["left"].selected],				widget.appConfigured[CENTER_1],	widget.appTxt[CENTER_1],	widget, widget.conf[widget.widgetSelect["left"].selected+OFFSET][3]	))	end, maxpage = widgetAssignment[CENTER_1].maxpage}
+							layout[BOTTOM_1]		= {func = function(frame,page)	return(_G[widgetAssignment[BOTTOM_1].mainfunc]	(frame,page,	widget.layout,widget.theme,widget.touch,widget.evnt,	widget.subConf[widget.widgetSelect["left"].selected],				widget.appConfigured[BOTTOM_1],	widget.appTxt[BOTTOM_1],	widget, widget.conf[widget.widgetSelect["left"].selected+OFFSET][3]	))	end, maxpage = widgetAssignment[BOTTOM_1].maxpage}
 						end
 						
 						if MULTI and widget.actualWidget.right.typ > 40 then
@@ -601,6 +627,20 @@ local function createChoiceField(line, parameter)
 	return field
 end
 
+-- not ready yet
+local function createChoiceLSWField(line, parameter)
+   local field = form.addChoiceField(line, nil, parameter[5], 	function() 
+																-- get: convert lsw-uid(stored val) into entry of lsw-ChoiceList
+																	local value 	= getValue(parameter):member()
+																	return value
+																end, 
+																-- set: convert entry of lsw-ChoiceList into lsw-uid
+																function(lsw) 
+																	local value = system.getSource({category=CATEGORY_LOGIC_SWITCH, member=lsw})
+																	setValue(parameter, value) 
+																end)
+	return field
+end
 
 
 local function createChoiceAppField(line, parameter)
@@ -610,6 +650,11 @@ end
 
 local function createTextButton(line, parameter)
   local field = form.addTextButton(line, nil, parameter[4], function() return setValue(parameter,0) end)
+  return field
+end
+
+local function createTextField(line, parameter)
+  local field = form.addTextField(line, nil, function()   return getValue(parameter) end, function(newValue)   setValue(parameter, newValue) end)
   return field
 end
 
@@ -675,8 +720,8 @@ end
 -- ************************************************
 -- "helper" for "getCurves()" to sum up existent curves
 -- ************************************************
-local function crvExists(crv)
- if crv ~= nil then 
+local function entryExists(entry)
+ if entry ~= nil then 
 	return(true) 
  else
 	return(false)
@@ -694,10 +739,30 @@ local function getCurves()
 	local chArray = {}
 	for i=1,64 do												-- choice list must start using 1 !!
 		chArray[i]={}
-		local inputCrv =  model.getCurve(i-1)					-- try to get a curve
+		local input =  model.getCurve(i-1)					-- try to get a curve
 
-		if crvExists(inputCrv) then								-- successfull ?
-			chArray[i][1]=inputCrv:name()
+		if entryExists(input) then								-- successfull ?
+			chArray[i][1]=input:name()
+			chArray[i][2]=i										-- choice list must start using 1 !! >> in curve you will have to substract value by !
+		else
+		--print("nil",i)
+		end
+	end
+	return chArray
+end
+
+-- ************************************************
+-- create LSW choice list
+-- ************************************************
+local function getLSWs()
+	local index = 0
+	local chArray = {}
+	for i=1,100 do												-- choice list must start using 1 !!
+		chArray[i]={}
+		local input =  system.getSource({category=CATEGORY_LOGIC_SWITCH, member=i})				-- try to get a lsw
+
+		if entryExists(input) then								-- successfull ?
+			chArray[i][1]=input:name()							-- store name
 			chArray[i][2]=i										-- choice list must start using 1 !! >> in curve you will have to substract value by !
 		else
 		--print("nil",i)
@@ -709,7 +774,7 @@ end
 
 
 -- *******************************************************************************
--- translates table entries from file (config form definitions) into functional ones
+-- translates/converts table entries from file (config form definitions) into functional ones
 -- unfortunately direct processing of create... statements not possible
 -- called by subFormBuilt, createSubWidgetField, read handler
 -- *******************************************************************************
@@ -717,16 +782,20 @@ local function migrateForm(formTbl)
 	
   local channelList={}
   local lookup ={
+	-- suite.conf		= translated into lua form.method
 	createNumberField 	= createNumberField	,
 	createTextButton 	= createTextButton	,
-	createBooleanField 	= createBooleanField	,
+	createBooleanField 	= createBooleanField,
 	createChoiceField 	= createChoiceField	,
 	createCurveChoice	= createChoiceField	,
 	createChannelChoice	= createChoiceField	,
+--	createLswChoice		= createChoiceField ,
+	createLswChoice		= createChoiceLSWField,
 	createSourceField	= createSourceField	,
 	createFilePicker	= createFilePicker ,
 	createSwitchField	= createSwitchField ,
-	createTextOnly 		= createTextOnly	
+	createTextOnly 		= createTextOnly,
+	createTextField		= createTextField,
 	}
 	
   local formArray = {}
@@ -742,6 +811,12 @@ local function migrateForm(formTbl)
 					formTbl[i][5] =getCurves()							-- "inject" actual curve list as choicelists
 					for x=1,#formTbl[i][5] do
 					end
+					
+				elseif  func == "createLswChoice" then
+					print("----------------    detected LSW choice")
+					formTbl[i][5] =getLSWs()							-- "inject" actual curve list as choicelists
+					for x=1,#formTbl[i][5] do
+					end				
 				end
 				formArray[i][j] = lookup[func]							-- conversion/mapping
 			else
@@ -754,12 +829,22 @@ local function migrateForm(formTbl)
 	return formArray
 end
 
+local function assignEmpty(widget,appIndex)								-- "subFunction" to assign an empty slot
+		--print("assign empty",widget,appIndex,slot)
+																		-- called by reassignwidgets 
+		local slot = appIndex*10+1								-- Top_1, Center_1, Bottom_1 ..; special case "topbar" later handled
+																		
+		widgetAssignment[slot] 		= widgetList[APPIndexNil]			--"empty" index in widgetlist
+		widget.appTxt[slot] 		= widgetList[APPIndexNil].txt
+		widget.subForm[appIndex]	= {}
+--		print("slot empty",slot,APPIndexNil,widgetAssignment[slot].label)
 
+end
 
 --  refresh widget assignment:
 --	txt fields in slot gets corresponding text
---	subform items are prepared
---  slot is assigned to the new app
+--	subform items are prepared 						widget.subForm[appIndex]
+--  slot is assigned to the new app					widgetAssignment[slot]
 
 -- local function reAssignWidgets(appUID,index,appIndexXX,widget)
 local function reAssignWidgets(configIndex,appUID,widget)
@@ -767,35 +852,32 @@ local function reAssignWidgets(configIndex,appUID,widget)
 		--if index > 4 then offset = 30 end									-- index 1-3: left frame/widget
 		
 		--print("   reass mode",WIDGET_MODE)
-		local appIndex = configIndex-OFFSET	-TOP_OFFSET					-- index which starts by 1 (=topBar)
-		local slot = appIndex*10+offset+1								-- Top_1, Center_1, Bottom_1 ..; special case "topbar" later handled
+		local appIndex = configIndex-OFFSET	-TOP_OFFSET					-- index which starts by 1 (=Appo1L); o identifies topline
+		if appIndex == 0 then appIndex = TOPLINE end
+		local slot = appIndex*10+1								-- Top_1, Center_1, Bottom_1 ..; special case "topbar" later handled
 		if WIDGET_MODE == TOPBAR_WID then								-- we have to check if topbar is adressed 
 
-			if configIndex == (OFFSET+1) then							-- here we detect TopBar reassignment
-				slot = TOPLINE
-				if debug8 then print("LOAD TXT TOP") end
-				widget.appTxt[TOPLINE] 	= widgetList[appUID].txt		-- here we load lang specific text !
-				-- if debug8 then print("sample (assigment)",assignment,widget.appTxt[TOPLINE].motorSafe[1])	end			
-			end
+	--		if configIndex == (OFFSET+1) then							-- here we detect TopBar reassignment
+				--slot = TOPLINE
+	--			if debug8 then print("LOAD TXT TOP") end
+	--			widget.appTxt[slot] 	= widgetList[appUID].txt		-- here we load lang specific text !
+	--			 if debug8 then print("sample (assigment)",assignment,widget.appTxt[slot].motorSafe[1])	end			
+	--		end
 
 		end
-		if debugReas then print("   REASSIGN WAS CALLED configIndex,appUID,appIndex",configIndex,appUID,appIndex) end
+		if debugReas then print("   REASSIGN WAS CALLED configIndex,appUID,appIndex,slot",configIndex,appUID,appIndex,slot) end
 		if appUID ~= APPIndexNil then													-- represents choice list index: so get corresponding subForm if something was selected (1=nothing)
-					
+
 			-- if debugReas then print("     NEW assignment",slot,widgetList[appUID].txt) end
 			widgetAssignment[slot] 	= widgetList[appUID]			-- assignindex e.g. "Top_1" slot  =  widgetList[#6]  .label = "setcurve" (#6 = setcurve App)
 			widget.appTxt[slot] 	= widgetList[appUID].txt		-- here we load lang specific text !
 			if debugReas then print("     assign (slot,appUID..): ",slot,appUID,widgetList[appUID].label) end
 			widget.subForm[appIndex]=migrateForm(getSubForm(appUID,widgetAssignment[slot].txt,widget.language))
---
+			print(" ***********    NEW assignment",slot,widgetAssignment[slot].mainfunc)
 		else														-- fill empty assignment with dummy data to ensure persistency
-			
-			widgetAssignment[slot] 		= widgetList[APPIndexNil]		--"empty" index in wisdgetlist
-			widget.appTxt[slot] 		= widgetList[APPIndexNil].txt
-			widget.subForm[appIndex]	= {}
-			print("slot empty",slot,APPIndexNil,widgetAssignment[slot].label)
+			assignEmpty(widget,appIndex)
 		end
-	
+		
 
 end
 
@@ -844,6 +926,7 @@ end
 local function subFormBuilt(parameter,widget,fields,configIndex,appListIdx,slot)
 
 	local widgetIndex = configIndex - OFFSET -TOP_OFFSET
+		if widgetIndex == 0 then widgetIndex = TOPLINE end
 	fields[#fields + 1] = field	
 							
 --	widgetAssignment[slot].txt	= widgetList[appListIdx].txt													-- here we load lang specific text for this app, so subForm can be filled with labels !
@@ -854,20 +937,25 @@ local function subFormBuilt(parameter,widget,fields,configIndex,appListIdx,slot)
 
 	if #widget.subForm[widgetIndex] >0 then															-- subForm=evaluated during "createwidgetfield" ; check if formlines do exist
 		for index = 1, #widget.subForm[widgetIndex] do													-- browse through lines
+			local value = widget.subConf[widgetIndex][index]
 
-			widget.subForm[widgetIndex][index][3] = widget.subConf[widgetIndex][index]					-- set cached value 
-
+			widget.subForm[widgetIndex][index][3] = value					-- set cached value 
+	
 			paraSub 	= widget.subForm[widgetIndex][index]											-- get subform line [appEntryNum][corresp.SubFormLine][SubFormLine.Item]
 			if not pcall(function() paraSub[3] = widget.subConf[widgetIndex][index]  end ) then			-- value "injection" into paraSub[3]
 				print("ERROR Config injection")
 				paraSub[3] 	= nil
 			end
-
+			if paraSub[3] == nil then				-- on 1st built, no value set, so default
+					print ("---- subVal empty, default:",widget.subForm[widgetIndex][index].default)
+					paraSub[3] = widget.subForm[widgetIndex][index].default
+			end				
 			local line = form.addLine("   " .. paraSub[1])												-- get line label
 			local tmp=paraSub[2]																		-- type to create
 			field = paraSub[2](line, paraSub) 															-- finally, create field
 			if debug8 then print("  648       create appIdx, index,subField,val ", widgetIndex, index,line) end
-			fields[#fields + 1] = field			
+			fields[#fields + 1] = field		
+			print("880 found",paraSub[3] )			
 		end
 	else
 		print("             found empty slot during subForm Built, no subItems defined in widget # "..widgetIndex)
@@ -886,14 +974,15 @@ end
 -- **************************************************************************************************
 --local function createSubWidgetField(line, parameter,widget,index, appIndex)							-- appIndex: 1=app01, 2=app02...
 local function createSubWidgetField(line, parameter,widget,configIndex,widgetIndex)							-- widgetIndex: 1=app01, 2=app02...
+	print("925  ************************************************   enter createsub mit Index",widgetIndex,parameter[1],parameter[3])
 
 	if debug8 then  
-		print("   770 createSubWidgetField // AppField configIndex, field,val",configIndex,parameter[1],parameter[3])
+		print("   770 createSubWidgetField // AppField configIndex, field,val",configIndex,parameter[1],parameter[3])		--para[1] = label, para[3] = value
 	end
 	
 	-- ***** Part1 this is the app main entry:
 	
-	local lookup = defApplist()																		-- get choiceList
+--!!	local lookup = defApplist()																		-- get choiceList
 	local paraSub = {}
 	local field = form.addChoiceField(line, nil, parameter[5], 										-- here we built "main" choiceField for appN
 			function()
@@ -903,11 +992,24 @@ local function createSubWidgetField(line, parameter,widget,configIndex,widgetInd
 					--paraCache[3] = val
 					--print("***************** Get app value",val, parameter[3]) 
 					       --return getValue(parameter) end,										-- getVal >> returns value when "reading"
-					return getAppSelectionValue(parameter) end,
+					local returnVal
+					if widgetIndex == TOPLINE then
+						returnVal = getTopBarSelectionValue(parameter)
+					else
+						returnVal = getAppSelectionValue(parameter)
+					end
+					return returnVal end,
 					
 			function(choice) 																		-- setVal>> user input induced change of value; so we have to built the whole formsheet from skratch
-				local lookup = defApplist()	
+			local lookup
+			if widgetIndex == TOPLINE then
+				lookup = defTopBarlist()
+				print("950  ********************    OK, got TopBar Sub")
+			else
+				lookup = defApplist()
+			end
 --!!!
+
 				local appUID = lookup[choice] [2]
 				print("*********************************** set appUID , configIndex   *********",appUID,configIndex)
 --				print("***************** set app convrt",value)
@@ -939,7 +1041,7 @@ local function createSubWidgetField(line, parameter,widget,configIndex,widgetInd
 				end
 				
 ]]
-				-- ***** Part2: if an app was selected >> evaluate subform entries & create complete new Form (recursive:
+				-- ***** Part2: if an app with "additional parameter config" was selected >> evaluate subform entries & create complete new Form (recursive:
 		
 				for formLine=1,#widget.conf do
 					--dumpConf(widget)
@@ -951,20 +1053,21 @@ local function createSubWidgetField(line, parameter,widget,configIndex,widgetInd
 					 --err
 					end
 					
-					if parameter[2] == createSubWidgetField then									-- we got an subwidget choice field
+					if parameter[2] == createSubWidgetField then									-- !!!! here we got an subform  indication from "widget.conf ", but maybe choosen app has no further params ? 
 					
-						local tmp_widgetIndex
-						tmp_widgetIndex =formLine - OFFSET												-- "widgetIndex" for rekursive call
-						if TOP_MODE then
+					  local tmp_widgetIndex
+					  tmp_widgetIndex =formLine - OFFSET												-- "widgetIndex" for rekursive call
+					  if TOP_MODE then
 						--	tmp_widgetIndex =	tmp_widgetIndex +1											-- one more entry due to TopBar
-							tmp_widgetIndex =	tmp_widgetIndex -1											-- one more entry due to TopBar
-						end
-						
+						tmp_widgetIndex =	tmp_widgetIndex -1											-- one more entry due to TopBar
+					  end
+					  if tmp_widgetIndex == 0 then tmp_widgetIndex = TOPLINE end
 						-- built "select subApp" line
-						local value = parameter[3]													-- actual / new SubApp selection
-						line = form.addLine(parameter[1])											-- >> line label	
+						local value = parameter[3]														-- actual/cached App selection
+				
+						line = form.addLine(parameter[1])												-- >> built "app" line	
 --						print("******************  recursive create",parameter[1],parameter[3])
-						local field = createSubWidgetField(line, parameter,widget,formLine,tmp_widgetIndex)	-- create main app formline//  Choice-line including functions to refresh form in case of set new "item";  offset because of header items (=1)
+						local field = createSubWidgetField(line, parameter,widget,formLine,tmp_widgetIndex)	-- create app formline//  Choice-line including functions to refresh form in case of set new "item";  offset because of header items (=1)
 
 						-- prepare to built dependent / subApp specific Lines						
 						local widgetIndex2 = formLine - OFFSET											-- app1..app3; offset because of #header items 
@@ -984,7 +1087,7 @@ local function createSubWidgetField(line, parameter,widget,configIndex,widgetInd
 							print("       ******** due to user change, call subformBuilt: para1 , formline, idx, slot  ",parameter[1],formLine, appListIdx,slot) 
 						end
 						-- built specific subForm  !!! ERROR configIndex !!!
-						subFormBuilt(parameter,widget,fields,formLine, appListIdx,slot)	 -- !! wrong subform %%% so substract 1 !! 
+						subFormBuilt(parameter,widget,fields,formLine, appListIdx,slot)	 
 
 					else
 						line = form.addLine(widget.conf[formLine][1])								-- create main form entries
@@ -1009,7 +1112,11 @@ end
 
 local function handleWidgetTree(parameter,widget,fields,configIndex)									-- index = formline sequence
 	if debug8 then print("   990 handle widget tree START with index",index) end
-	local widgetIndex = configIndex - OFFSET - TOP_OFFSET																	-- 1=app1L..6=app3R; offset because of #header items / 0=topBar
+	local widgetIndex = configIndex - OFFSET - TOP_OFFSET												-- 1=app1L..6=app3R; offset because of #header items / 0=topBar >> extra index
+	if widgetIndex == 0 then 
+		widgetIndex = TOPLINE 
+		print("--- 1060 Topline detected")
+	end								
 	local lookup = defApplist()																			-- get ChoiceList
 
 	if widget.conf[configIndex][3] == nil then 															-- on very first run, initiatlize selection
@@ -1022,13 +1129,13 @@ local function handleWidgetTree(parameter,widget,fields,configIndex)									-- 
 --		appUID =widget.conf[configIndex+1][3]															-- appList : field[#idx,3],2 = fieldValue of app selector ( choice List) >> widget index, e.g. 6 =setcurve
 --	else
 --		appUID =widget.conf[configIndex][3] 
---	end
-		
+--	end	
 	local slot = widgetIndex*10+1																		-- "handler" Top_1, Center_1, Bottom_1 ..	11,21,31 ....
 
 	if debug8 then print("   1000 handle widget tree create form level1     configIndex, widgetIdx, slot,  appUID:",configIndex,widgetIndex,slot,appUID) end
 																										-- here we define & call the main entry of the app (app choice)
 	line = form.addLine(parameter[1])																	-- >> line label
+	print("///// 1080 call FieldBuilt",parameter[1],configIndex,widgetIndex)
 	local field = createSubWidgetField(line, parameter,widget,configIndex,widgetIndex)					-- creates Choice-line including functions to refresh form in case of set new "item";  offset because of header items (=1)
 																										-- and now we have to create the app dependent sub entries
 	subFormBuilt(parameter,widget,fields,configIndex,appUID,slot)
@@ -1198,7 +1305,11 @@ local function create()
 			subConf[i][j]=nil															-- INIT cache
 		end
 	end
-
+	subForm[TOPLINE]={}																	-- dedicated TOPLINE (fixed index) handling
+	subConf[TOPLINE]={}
+	for j= 1,10 do
+		subConf[TOPLINE][j]=nil			
+	end
 	
 	local apps = {}																		-- available apps & index
 	local apps_template = defApplist()													-- app selection list (temp only)
@@ -1226,7 +1337,8 @@ local function create()
 		conf = {					
 			{confTxt[1][language], 		createChoiceField,				nil,	1,	 	{{"dark",1},{"bright",2}}},	
 			
-			{"TopLine", 				createTopChoiceField,			nil,	1,		topbars	},
+--			{"TopLine", 				createTopChoiceField,			nil,	1,		topbars	},
+			{"TopLine", 				createSubWidgetField,			nil,	1,		topbars	},
 			
 			{"App 01L", 				createSubWidgetField,			nil,	1,		apps	},
 			{"App 02L", 				createSubWidgetField,			nil,	1,		apps	},	
@@ -1309,9 +1421,9 @@ local function create()
 
 	local lastWidget = nil						-- widget which was selected on last run
 
-	local layoutApp= {}							-- App/widget specific layout (e.g. topbar)
+	local layout= {}							-- App/widget specific layout (e.g. topbar)
 	local param = {}							-- widget specific parameters / variables (e.g. topbar)
-			param[TOPLINE]	={}
+			param[TOPLINEslot]	={}
 			param[TOP_1]	={}
 			param[CENTER_1]	={}
 			param[BOTTOM_1]	={}		
@@ -1319,7 +1431,11 @@ local function create()
 			param[CENTER_2]	={}
 			param[BOTTOM_2]	={}	
 	  
-	param[TOPLINE]["TOP_SafetyTime"] = 0
+	param[TOPLINEslot]["TOP_SafetyTime"] = 0
+	
+	local timer ={								-- timer for cyclic events
+					garbage 	= os.clock(),
+		}
 	
 	local enable = {
 		left = true,
@@ -1354,9 +1470,10 @@ local function create()
 		display 	 = display , 				-- display type (x20/x18..) to optimize / finetune visualization
 		wpath		 = wpath,					-- path of subwidgets / apps
 		language 	 = language,
-		layoutApp 	 = layoutApp,
+		layout 	 	 = layout,
 		param		 = param,
 		com			 = com,						-- commmunication variables between "background" tasks // wakeup calls
+		timer		 = timer,
 		}
 end
 
@@ -1375,22 +1492,22 @@ local function frontendConfigure(widget)
 																						-- rough screen layout:
 		frameLeft = {																	-- frame layouts: for compatibility reasons, only "left" is declared
 			name= "left",																-- name
-			x = 0,																		-- x-position
-			y = (topBarHeight+blank)*widget.h,																		-- y-position (percent)
+			x = 0,																					-- x-position
+			y = (topBarHeight+blank)*widget.h,														-- y-position (abs)
 			w = widget.w*widgetWidth,																-- width
 			h = widget.h*widgetHeight																-- height
 			}
 		frameRight = {																	-- frame layouts: for compatibility reasons, only "left" is declared
 			name= "right",																-- name
 			x = widget.w*0.5,																		-- x-position
-			y = (topBarHeight+blank)*widget.h,																		-- y-position (percent)
+			y = (topBarHeight+blank)*widget.h,														-- y-position (abs)
 			w = widget.w*widgetWidth,																-- width
 			h = widget.h*widgetHeight																-- height
 			}
 		frameTop = {																	-- frame layouts: for compatibility reasons, only "left" is declared
 			name= "top",																-- name
 			x = 0,																		-- x-position
-			y = 0,																		-- y-position (percent)
+			y = 0,																		-- y-position (abs)
 			w = widget.w,																-- width
 			h = widget.h*topBarHeight																-- height
 			}
@@ -1419,21 +1536,33 @@ local function frontendConfigure(widget)
 	--]]	
 		widget.theme = initTheme(evalTheme(widget))												-- ensure theme change will be activated
 
-		local start = 2
+		local start = 2																			-- AppIndex 1= TopBar; index 2 = App01L
 		if TOP_MODE then start = 1 end
 
+		--dumpConf(widget)
+		
 		-- load selected apps / subWidgets (configuration in file "_conf"); #loops = #widgets:
-		for i=start,NumAPPS+1 do
-			if  widgetAssignment[widArray[i] ].label ~= "EMPTY" then
-				loadApp(widget.wpath.. widgetAssignment[widArray[i] ].File)
-			--	loaded_chunk = assert(loadfile(widget.wpath.. widgetAssignment[widArray[i] ].File ))
-		--[[		
-				local fLen = string.len(file)
-				file = string.sub(file,1,fLen-4)
-				require(widget.wpath.. file)
-		--]]	   
---				print("main 1290: load widgetfile",widget.wpath.. widgetAssignment[widArray[i] ].File )
-			--	loaded_chunk()
+		for i=1,NumAPPS+1 do
+
+			local label = ""
+			if pcall(function()print("   ++++++++++   app label",i,widgetAssignment[widArray[i] ].label)return end) then
+			print("   ++++++++++   app label",i,widgetAssignment[widArray[i] ].label)
+			end
+			if pcall(function() label = widgetAssignment[widArray[i] ].label return end ) then
+				if  widgetAssignment[widArray[i] ].label ~= "EMPTY" then							-- pcall OK >> persistent data, so check for app
+					loadApp(widget.wpath.. widgetAssignment[widArray[i] ].File)
+					print("        //////////////////////////////////////////       LOAD file",widget.wpath.. widgetAssignment[widArray[i] ].File)
+				--	loaded_chunk = assert(loadfile(widget.wpath.. widgetAssignment[widArray[i] ].File ))
+				--	loaded_chunk()
+				--[[		
+						local fLen = string.len(file)
+						file = string.sub(file,1,fLen-4)
+						require(widget.wpath.. file)
+				--]]	   
+				end
+			else																					-- pcall fail >> very first widget run, init ...
+				local appIndex = (widArray[i]-1)/10
+				assignEmpty(widget,appIndex)
 			end
 		end
 
@@ -1443,13 +1572,13 @@ local function frontendConfigure(widget)
 			local configWidgetCall="conf_".. widgetAssignment[widArray[i] ].label				-- call widget dependent function to get config string
 
 		end
-		--		print("1300 2 fronconf*********************************************    pre reconf",widget.layoutApp.width01)
+		--		print("1300 2 fronconf*********************************************    pre reconf",widget.layout.width01)
 
 		-- *******************************    evaluate display specific settings   ***************************		
 		-- only on 1st loop
 		if widget.display == nil then
-			widget.display 	 = evaluate_display()
-			widget.layoutApp = defineLayout(widget.display)
+			widget.display 	= evaluate_display()
+			widget.layout 	= defineSuite_Layout(widget.display)
 		end
 		
 		txtSize = {}
@@ -1460,6 +1589,8 @@ local function frontendConfigure(widget)
 		widget.touch.Y = nil
 		
 		initLayout(widget)
+		
+		collectgarbage("collect")																-- housekeeping after init
 
 		return(true)	
 	else
@@ -1532,15 +1663,17 @@ end
 -- ******** call topBar
 
 local function w_top(widget)
-
+	print("call top func",TOPLINE,TOPLINEslot,widgetAssignment[TOPLINEslot].mainfunc)
 	if not pcall( layout[TOPLINE] ~= nil) then	
-
-		widget.appConfigured[TOPLINE]=layout[TOPLINE].func(frameTop,1,widget.layout)
+		local slot = TOPLINE *10 +1
+--		widget.appConfigured[slot]=layout[TOPLINEslot].func(frameTop,1,widget.layout)
+		widget.appConfigured[slot]=layout[TOPLINEslot].func(frameTop,1,widget.appConfigured[TOPLINEslot])
 		--widget.param[TOPLINE]=top18a(frameTop,1,	widget.layout,widget.theme,widget.touch,widget.evnt,	widget.appConfigured[TOPLINE],	widget.appTxt[TOPLINE],		widget,sensors,widget.param[TOPLINE])
 		-- temporarely fixed call
 		--widget.param[TOPLINE]=top18a(frameTop,1,	widget.layout,widget.theme,widget.touch,widget.evnt,	widget.appConfigured[TOPLINE],	widget.appTxt[TOPLINE],		widget,sensors,widget.param[TOPLINE])
+		print("Topline no error")
 	else
-		--print("Error calling TopBar")
+		print("Error calling TopBar")
 	end
 
 end
@@ -1565,11 +1698,11 @@ local function paint(widget)
 			w_right(widget)
 			--print("**********   mode",WIDGET_MODE,TOP_MODE)
 		end
---[[		
+		
 		if TOP_MODE then
 			w_top(widget)
 		end
---]]		
+		
 		resetEvnt(widget)													-- delete event stati not needed	
 	end
 end
@@ -1607,15 +1740,15 @@ local function configure(widget)
 	dumpConf(widget)
 	for configIndex=1,#widget.conf do
 		parameter = widget.conf[configIndex]											-- get complete Formline
-		if debug8 then print("1520  configure index, subwid?:",configIndex,parameter[1])	end											   
+		if debug8 then print("1670  configure index, subwid?:",configIndex,parameter[1])	end											   
 		local idx2 = configIndex
-
+		print("1670 :  createwid",parameter[2])
 		if parameter[2] == createSubWidgetField then									-- we got an subwidget choice field
 			if TOP_MODE then															-- we have a tobbar item in the form, so other index:
-				if debug8 then print("1590 call widTree (topbar mode) with confIndex",   configIndex) end
+				if debug8 then print("1675 call widTree (topbar mode) with confIndex",   configIndex) end
 				handleWidgetTree(parameter,widget,fields,configIndex)					-- built complete "app incl. subform" fields			
 			else
-				if debug8 then print("1600call widTree no top with confIndex",   configIndex) end
+				if debug8 then print("1680call widTree no top with confIndex",   configIndex) end
 				handleWidgetTree(parameter,widget,fields,configIndex)			
 			end
 		else																			-- here we go with the header entries (theme, topline..)
@@ -1634,23 +1767,26 @@ local function configure(widget)
 end
 
 
-																			-- ************************************************
-																			-- ***		 change to new selected app			*** 
-																			-- ************************************************
+																			-- ****************************************************
+																			-- ***		 change to new selected app				*** 
+																			-- ****************************************************
 local function changeApp(frm,selected,widget)																	-- reset app config status
 	widget.actualWidget[frm] 			= {typ=handler , page = 1, 	maxpage = layout[handler ].maxpage  }			-- set actual app parameters ; typ = top/center/bottom etc..
 	widget.widgetSelect[frm].running	= selected																	-- flag change app was finished
 end
 	
 
-																			-- ************************************************
-																			-- ***		 if app needs background activities	*** 
-																			-- ************************************************	
+																			-- ****************************************************
+																			-- ***		 if app needs background activities		*** 
+																			-- ***				 for future use					*** 	
+																			-- ***	  by now we have functions in "widget lua"	*** 																			
+																			-- ****************************************************	
 local function loadBackGroundLibs(widget)
 		-- *** load background libs if needed
 	local start = OFFSET + TOP_OFFSET
 
 	local search = "label"																				-- set search flag for sefApplist
+																										-- rough example:
 	for i = start,start+NumAPPS	do																		-- loop appSlot indizes
 		if widget.conf[i][3] == defApplist("Model Finder",search,nil) then								-- detect app that need background ntask
 				loaded_chunk = assert(loadfile("/scripts/libUnow/widgets/Modelfind/backgrnd_mf.lua"))
@@ -1662,27 +1798,31 @@ end
 		
 		
 		
-																			-- ************************************************
-																			-- ***		 some apps initiate bg activities	*** 
-																			-- ************************************************			
+																			-- ****************************************************
+																			-- ***		 some apps initiate bg activities		*** 
+																			-- ***	 this function detects & execute calls 		*** 
+																			-- ****************************************************			
 local function backGround(widget)
 	local start = OFFSET + TOP_OFFSET
-	local search = "label"																					-- set search flag for sefApplist
 
-	for i = start,start+NumAPPS	do																			-- determine which apps are configured & call corresponding background tasks
-		if 	widget.conf[i][3] == defApplist("Model Finder",search,nil) then 	
-			local appSlot = lookupAppHndl(i-start)															-- get handler (TOP_1...) where app is installed
---			print("background found Model Finder",i,defApplist("GVAR",nil,search),appSlot)
-			if widget.appConfigured[appSlot] == false then
-				MF_frontendConfigure(widget,widget.appTxt[appSlot])											-- if app not "first run configured" >> do
-			end
-			
-			if pcall(function() widget.modelfind.com = background_MF(widget.modelfind.com) return end) then
-				-- OK
-			else
-				-- failure
-				loadBackGroundLibs(widget)
-			end
+	for i = start,start+NumAPPS	do																			-- loop "slots"		
+			local appUID = widget.conf[i][3]																-- get app UID in frame assignment
+			if appUID ~= APPIndexNil and widget.widgetList[appUID].bgFunc ~= nil then						-- app was assigned and needs bg activities:										-- determine which apps are configured & call corresponding background tasks	
+				--print("********** bg found in appuid",appUID)
+				local appSlot = lookupAppHndl(i-start)															-- get handler (TOP_1...) where app is installed
+				if widget.appConfigured[appSlot] == false then
+					MF_frontendConfigure(widget,widget.appTxt[appSlot])											-- if app not "first run configured" >> do
+							collectgarbage("collect")	
+				end
+--				local checkBGcall																				
+--				if pcall(function() widget.modelfind.com = bg_MFinder(widget.modelfind.com) return end) then
+--				if pcall(function() checkBGcall = bg_MFinder(widget) return end) then
+				if pcall(function() _G[widget.widgetList[appUID].bgFunc](widget) return end) then				-- call background function from global namespace
+					-- OK
+				else
+					-- failure
+					-- loadBackGroundLibs(widget)		(in case future developments needs dedicated "background libs" )
+				end
 		end
 	end
 end
@@ -1692,10 +1832,16 @@ end
 																				-- ************************************************
 
 local function wakeup(widget)
+
+	if os.clock() > widget.timer.garbage + 5 then																-- housekeeping every x seconds
+		widget.timer.garbage = os.clock()
+		collectgarbage("collect")	
+	end
+	
 	if PERFMON then
 		PM_t_start 					= os.clock()					-- handler start time
 		PM_array[PM_pointer] 		= PM_t_start - PM_last_start 	-- store interval time
-		PM_last_start				= PM_t_start
+
 		PM_pointer 					= PM_pointer +1				-- increment pointer
 		if PM_pointer > PM_NUM_ENTRIES then				-- check array boundaries
 			PM_pointer = 1
@@ -1708,10 +1854,12 @@ local function wakeup(widget)
 				PM_sum = PM_sum + PM_array[i]		
 			end
 			local avg_cycleTime = PM_sum/PM_NUM_ENTRIES
-			print("*****************    cycle time Suite3:     ",avg_cycleTime) 
+			print("*****************    cycle time Suite3:   avg,  actual  ",avg_cycleTime,PM_t_start - PM_last_start) 
+
 		end
+		PM_last_start				= PM_t_start
 	end
-	
+	--[[
 	if PM_display then
 		local PM_sum=0
 		for i =1,PM_NUM_ENTRIES do
@@ -1720,7 +1868,7 @@ local function wakeup(widget)
 		local avg_cycleTime = PM_sum/PM_NUM_ENTRIES
 		print("*****************    cycle time Suite3:     ",avg_cycleTime)
 	end
-	
+	--]]
 
 	
 
@@ -1788,6 +1936,43 @@ end
 
 
 local function menu(widget)					-- menu handler
+	return
+end
+
+
+-- read subform of "slot" index 1..x
+local function read_subForm(appIndex,OFFSET,widget)
+	-- local appIndex = index-OFFSET
+	if appIndex == NumAPPS+1 then appIndex = TOPLINE end
+	local tmpSrc
+	local indx2
+	
+	if #widget.subForm[appIndex] > 0 then												-- only if entries exist (nothing in case appindex = 1)
+			for indx2 = 1,#widget.subForm[appIndex]	do
+	
+				if widget.subForm[appIndex][indx2][1] == "  Cv Input-Src" then			-- handling source
+					tmpSrc = storage.read("souce")
+					
+					widget.subForm[appIndex][indx2][3]  = tmpSrc
+					widget.subConf[appIndex][indx2] 	= tmpSrc
+
+				else
+	--				widget.subForm[appIndex][indx2][3] = widget.subForm[appIndex][indx2][1])
+					local readVal 						= storage.read("dummy")
+					widget.subForm[appIndex][indx2][3] 	= readVal
+					if debugConf then print(" read subconf Val",appIndex,indx2, readVal) end
+					widget.subConf[appIndex][indx2] 	= readVal
+					-- widget.subConf[appIndex][indx2] = widget.subForm[appIndex][indx2][3]
+					-- local readVal = widget.subForm[appIndex][indx2][3]
+
+					if readVal == nil then
+						if debugConf then print("read was nil; SO DEFAULT	",widget.subForm[appIndex][indx2].default) end
+						readVal = widget.subForm[appIndex][indx2].default
+					end
+
+				end
+			end
+	end
 
 end
 
@@ -1813,7 +1998,7 @@ local function read(widget)
 	end
 
 	--************************	
-	--   read App selection lines
+	--   read App selection lines, max from TopBar to App03R, depends of suite mode
 	--************************		
 
 --	local numSubFormItems	= 6															-- number of choice lines (subWidgets / Apps..) with dependent forms
@@ -1824,45 +2009,30 @@ local function read(widget)
 		widget.conf[configIndex][3] = storage.read(widget.conf[configIndex][1])			-- read Value; represents return value of widget choice list	
 
 		local appUID = widget.conf[configIndex][3]
-		if debugConf then print("read main App widConfIdx #3:",configIndex,widget.conf[configIndex][1]," ",widget.conf[configIndex][3],"appUID:",appUID,"appIndex:",appIndex) end
+		if debugConf then print("1940 read main App widConfIdx #3:",configIndex,widget.conf[configIndex][1]," ",widget.conf[configIndex][3],"appUID:",appUID,"appIndex:",appIndex) end
 
 		 reAssignWidgets(configIndex,appUID,widget)										-- assign subApp 
 	end
 	
-	local index
+	
+	
+	local appIndex
+	
 	--************************	
-	--   read app specific formlines
+	--   read app specific sub-formlines
 	--************************		
-	for index = 1,#widget.subForm do													--  loop app specific sub-config; 1=app01, 3=app03 ....
-		if #widget.subForm[index] > 0 then												-- only if entries exist (nothing in case appindex = 1)
-			for indx2 = 1,#widget.subForm[index]	do	
-				local appIndex = index-OFFSET
-
-				if widget.subForm[index][indx2][1] == "  Cv Input-Src" then			-- handling source
-					tmpSrc = storage.read("souce")
-					
-					widget.subForm[index][indx2][3] = tmpSrc
-					widget.subConf[index][indx2] 	= tmpSrc
-
-				else
-	--				widget.subForm[index][indx2][3] = widget.subForm[index][indx2][1])
-					local readVal = storage.read("dummy")
-					widget.subForm[index][indx2][3] = readVal
-					if debugConf then print(" read subconf Val",index,indx2, readVal) end
-					widget.subConf[index][indx2] = readVal
-					-- widget.subConf[index][indx2] = widget.subForm[index][indx2][3]
-					-- local readVal = widget.subForm[index][indx2][3]
-
-					if readVal == nil then
-						readVal = widget.subForm[index][indx2].default
-					end
-
-				end
-
-			end
-		end
+	for appIndex = 1,#widget.subForm do													--  loop app specific sub-config; 1=app01, 3=app03 ....; defined by reAssignWidgets
+		print("call subform (appIndex)",appIndex)
+		read_subForm(appIndex,OFFSET,widget)
 	end
-	local dumpResult = false
+--	if WIDGET_MODE == TOPBAR_WID then
+	--		print("call subform (TOPLINE)",TOPLINE)
+	--	read_subForm(TOPLINE,0,widget)
+--	end
+	
+	
+
+	local dumpResult = true
 	if dumpResult then
 		print("**** read finished with result of appConfig :")
 		print("****     Header config")
@@ -1871,16 +2041,39 @@ local function read(widget)
 		dumpSubConf(widget)
 	end
 	
-	loadBackGroundLibs()
+
+	-- loadBackGroundLibs()
 
 end		
+
+
+-- write subform data of app
+local function write_subform(appIndex,widget)
+	local indx2
+	if appIndex == NumAPPS+1 then appIndex = TOPLINE end
+	for indx2 = 1,#widget.subForm[appIndex]	do							-- browse through all subform lines of an app
+				--if debugConf then 	print("write sub index",index,indx2) end
+				local subItem = widget.subForm[appIndex][indx2][1]						-- get Item
+				if subItem ~= nil then
+					local value = widget.subForm[appIndex][indx2][3]	
+					if value == nil then 										-- write dummy in case no subform items
+						--value = "no subItem" 
+						value = widget.subForm[appIndex][indx2]
+					end
+					--if debugConf then print("writeSub",appIndex, subItem, value) end																	 
+					if debugConf then print("   subconf Val",appIndex,indx2,widget.subConf[appIndex][indx2], "Val:",value) end
+					widget.subConf[appIndex][indx2] = value						-- cache saved value in case of form refresh
+					storage.write(subItem, value)								-- save item
+				end
+	end
+end
 
 
 																			-- ************************************************
 																			-- ***		     write widget config 	   		*** 
 																			-- ************************************************
 local function write(widget)
-	local index,indx2
+	local index,indx2,appIndex
 
 	--************************	
 	--   write header lines
@@ -1906,24 +2099,16 @@ local function write(widget)
 	--************************	
 	--   write app specific formlines
 	--************************		
-	for index = 1, #widget.subForm do										-- browse through all subforms
-		if #widget.subForm[index] > 0 then										-- only if entries exist (nothing in case appindex = 1 = noApp)
-			for indx2 = 1,#widget.subForm[index]	do							-- browse through all subform lines of an app
-				--if debugConf then 	print("write sub index",index,indx2) end
-				subItem = widget.subForm[index][indx2][1]						-- get Item
-				if subItem ~= nil then
-					value = widget.subForm[index][indx2][3]	
-					if value == nil then 										-- write dummy in case no subform items
-						value = "no subItem" 
-					end
-					-- if debugConf then print("writeSub",index, subItem, value) end																	 
-					if debugConf then print("   subconf Val",index,indx2,widget.subConf[index][indx2], "Val:",value) end
-					widget.subConf[index][indx2] = value						-- cache saved value in case of form refresh
-					storage.write(subItem, value)								-- save item
-				end
-			end
+	for appIndex = 1, #widget.subForm do										-- browse through all subforms
+		if #widget.subForm[appIndex] > 0 then										-- only if entries exist (nothing in case appindex = 1 = noApp)
+			write_subform(appIndex,widget)
 		end
 	end
+	-- TopBar Formlines (if exist)
+--	if WIDGET_MODE == TOPBAR_WID and #widget.subForm[TOPLINE] > 0 then
+--		write_subform(TOPLINE,widget)
+--	end
+	
 
 end
 
@@ -2007,38 +2192,41 @@ local function event(widget, category, value, x, y)
 			else	print("    vTOUCH value:",  value, x, y)
 			end
 		end	
-		if value == TOUCH_END then													-- evaluate menu handler
+		if value == TOUCH_END then													-- touch determined: evaluate menu handler
+		
+			-- store coordinates
 			widget.touch.X=x
 			widget.touch.Y=y
 			-- ****    define touch area   *******
 			
-					--    widget selection
-			local y1 = 		widget.h * 0.2											
-			local y2 = 		widget.h * 0.8											
+			-- ****   y area of widget selection  *******
+			local y1 = 		widget.h * 0.2					-- prev widget: y-touched between 0% ..  y1  ; 1.0=100%										
+			local y2 = 		widget.h * 0.8					-- next widget: y-touched between y2 .. y3				
 			local y3 = 		widget.h		
 				
 									--    page selection
-			local yy1 = 		widget.h * 0.4												
+			local yy1 = 		widget.h * 0.4				-- y "bar" yy1..yy2								
 			local yy2 = 		widget.h * 0.6												
 			local yy3 = 		widget.h
 				
 
 			---- definitions in case of mode=SINGLE_WID
-				-- select widget#1 nxt / prev. widget) area
-				local xWidth= 	0.3		
-				
-				local x0 = 0
-				local x1 = 		widget.w  * 0.4											
-				local x2 = 		widget.w  * 0.6											
-				local x3 = 		widget.w
-				
-
-				local xx0 = 0
-				local xx1 = 		widget.w  * 0.2				
-				local xx2 = 		widget.w  * 0.8			
-				local xx3 = 		widget.w				
 			
-			if WIDGET_MODE ~= SINGLE_WID then 								-- adopt touch area
+			---- select widget#1 nxt / prev. WIDGET) x- area
+			local xWidth= 	0.3		
+				
+			local x0 = 0
+			local x1 = 		widget.w  * 0.4											
+			local x2 = 		widget.w  * 0.6											
+			local x3 = 		widget.w
+				
+			---- select widget#1 nxt / prev. PAGE) x- area
+			local xx0 = 0
+			local xx1 = 		widget.w  * 0.2				
+			local xx2 = 		widget.w  * 0.8			
+			local xx3 = 		widget.w				
+			
+			if WIDGET_MODE ~= SINGLE_WID then 							-- adopt touch area for 2 widget use
 
 				-- eval area for dual widget mode
 				-- select widget#2 nxt / prev. widget area
@@ -2055,8 +2243,6 @@ local function event(widget, category, value, x, y)
 				 xxEnd	= 	widget.w			
 				 xx1 	= 	(xx0+xxEnd)/2  - xWidth/2			
 				 xx2 	= 	xx1+ xWidth
-
-
 			
 			end																			
 			
@@ -2064,16 +2250,18 @@ local function event(widget, category, value, x, y)
 			-- ****     check if other app was selected "left" / single widget   ********
 			
 			if x > x1 and x < x2	then											
-			print("App actual LEFT",widget.widgetSelect["left"].selected)
-				if 		y < y1  			then 									--  "prev widget" was pressed
+				print("App actual LEFT",widget.widgetSelect["left"].selected)
+				if 		y < y1  			then 										--  "prev widget" was pressed
 					widget.widgetSelect["left"].selected = appSelector("prev",widget.widgetSelect["left"].running,"left")
 					--widget.appConfigured = false										-- enforce re-init of active (maybe config of non active has changed interim)
-				elseif	y > y2 and y < y3 	then 									-- "next" choosen
+					return true
+				elseif	y > y2 and y < y3 	then 										-- "next" choosen
 					widget.widgetSelect["left"].selected = appSelector("next",widget.widgetSelect["left"].running,"left")
-				--	widget.appConfigured = false											-- enforce re-init of active
+				--	widget.appConfigured = false										-- enforce re-init of active
+					return true
 				end					
-				print("AppSel LEFT",handler,widget.widgetSelect["left"].selected)
-				return true
+			--	print("AppSel LEFT",handler,widget.widgetSelect["left"].selected)
+
 			end
 
 	
@@ -2084,12 +2272,14 @@ local function event(widget, category, value, x, y)
 			if 		y < y1  			then 									--  "prev widget" was pressed
 					widget.widgetSelect["right"].selected = appSelector("prev",widget.widgetSelect["right"].running,"right")
 					--widget.appConfigured = false									-- enforce re-init of active (maybe config of non active has changed interim)
+					return true
 				elseif	y > y2 and y < y3 	then 									-- "next" choosen
 					widget.widgetSelect["right"].selected = appSelector("next",widget.widgetSelect["right"].running,"right")
 				--	widget.appConfigured = false										-- enforce re-init of active
+					return true
 				end					
-				print("AppSel RIGHT",handler,widget.widgetSelect["right"].selected)
-				return true
+				--print("AppSel RIGHT",handler,widget.widgetSelect["right"].selected)
+
 			end
 
 
