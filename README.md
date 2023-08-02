@@ -40,7 +40,7 @@ The wrapper exists in several variants (1,2,3), so that a single frame, two fram
 
 
 
-!(https://github.com/strgaltdel/Ethos_UDOs_Suite/blob/Beta-0.8/doc/total.png)
+![3in1 title](https://github.com/strgaltdel/Ethos_UDOs_Suite/blob/Beta-0.8/doc/total.png)
 Topbars can be generated individually by Lua developers, three examples are included
 
 
