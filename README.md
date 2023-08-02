@@ -1,9 +1,14 @@
 #                                           UDOs Suite
-                               for Ethos Tandem Transmitters
+
+
+
+or Ethos Tandem Transmitters
 
 
 BETA 0.8
+
 not for productive use
+
 tests only
 
 
