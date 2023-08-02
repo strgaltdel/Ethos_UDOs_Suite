@@ -1,14 +1,14 @@
-#                                           UDOs Suite
+#                                           UDOs Suite (BETA 0.8)
 
 for Ethos Tandem Transmitters
 
-BETA 0.8
+BETA 0.80
 
 not for productive use
 
 tests only
 
-July 2023
+30 July 2023
 
 
 
