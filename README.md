@@ -8,12 +8,17 @@ not for productive use
 
 tests only
 
+July 2023
 
-![3in1 title](https://github.com/strgaltdel/Ethos_UDOs_Suite/blob/Beta-0.8/doc/suite.png)
+
+![3in1 title](https://github.com/strgaltdel/Ethos_UDOs_Suite/blob/Beta-0.8/doc/total.png)
+
 ### This is a collection of small Ethos applications.
 
 
-July 2023
+
+
+![3in1 title](https://github.com/strgaltdel/Ethos_UDOs_Suite/blob/Beta-0.8/doc/suite.png)
 
 
 
@@ -26,6 +31,9 @@ The individual apps can be selected  by touch operation.
 Furthermore, each app can support multiple pages, which can also be scrolled through by touch.
 
 
+
+
+![3in1 title](https://github.com/strgaltdel/Ethos_UDOs_Suite/blob/Beta-0.8/doc/nav.png)
 
 The wrapper exists in several variants (1,2,3), so that a single frame, two frames, or even two frames (each with three apps) and a TopBar can be used.
 
