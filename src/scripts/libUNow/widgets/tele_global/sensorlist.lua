@@ -43,6 +43,8 @@ function defineSensors(widget)
 		["SBecV"]	= 	{name = "SBEC V", 			icon = ("BatBecV.png"),		path=frpPath,		options =  nil,				f_lenght=5,	dec=1,	alignV=-10,		alignB=5,	xh=false,	testVal = 5.67,		testUnit = "V" },
 		["EscA"]	= 	{name = "ESC Current",		icon = ("currB1.png"),		path=bmpPath,		options =  nil,				f_lenght=5,	dec=1,	alignV=0,		alignB=0,	xh=false,	testVal = 40.3,		testUnit = "A" },
 		["EscV"]	= 	{name = "ESC Voltage",	 	icon = ("LipoU.png"),		path=frpPath,		options =  nil,				f_lenght=5,	dec=1,	alignV=-4,		alignB=0,	xh=false,	testVal = 16.1,		testUnit = "V" },
+		["VFAS"]	= 	{name = "VFAS",	 			icon = ("LipoU.png"),		path=frpPath,		options =  nil,				f_lenght=5,	dec=1,	alignV=-4,		alignB=0,	xh=false,	testVal = 16.1,		testUnit = "V" },
+
 		["EscT"]	= 	{name = "ESC Temp", 		icon = ("thermo3.png"),		path=frpPath,		options =  nil,				f_lenght=5,	dec=0,	alignV=-17,		alignB=0,	xh=false,	testVal = 50.3,		testUnit = "Cel" },
 		["Erpm"]	= 	{name = "ESC RPM", 			icon = ("Prop.png"),		path=frpPath,		options =  nil,				f_lenght=5,	dec=0,	alignV=1,		alignB=0,	xh=false,	testVal = 4280,		testUnit = "" },
 		["ECon"]	= 	{name = "ESC Consumption", 	icon = ("Batt3.png"),		path=bmpPath,		options =  nil,				f_lenght=5,	dec=0,	alignV=1,		alignB=0,	xh=false,	testVal = 1850,		testUnit = "mA" },		
@@ -68,7 +70,7 @@ function defineSensors(widget)
 		
 		-- Vario / oXs
 		["alt"] 	= 	{name = "Altitude",			icon = ("alti.png"),		path=bmpPath, 		options =  nil,				f_lenght=5,	dec=0,	alignV= midi,	alignB=0,	xh=false,	testVal = 72.82,	testUnit = "m" },
-		["VSpeed"] 	= 	{name = "VSpeed",			icon = ("alti.png"),		path=bmpPath, 		options =  nil,				f_lenght=5,	dec=0,	alignV= midi,	alignB=0,	xh=false,	testVal = 72.82,	testUnit = "m/s" },
+		["VSpeed"] 	= 	{name = "VSpeed",			icon = ("alti.png"),		path=bmpPath, 		options =  nil,				f_lenght=5,	dec=0,	alignV= midi,	alignB=0,	xh=false,	testVal = 01.82,	testUnit = "m/s" },
 		["ASpd"]	= 	{name = "Air Speed",		icon = ("speedIAS.png"),	path=frpPath,		options =  nil,				f_lenght=5,	dec=1,	alignV=  0,		alignB=0,	xh=false,	testVal = 92.3,		testUnit = "km/h"  },
 		
 		-- oTx "labels"

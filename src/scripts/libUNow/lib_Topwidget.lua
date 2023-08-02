@@ -180,57 +180,62 @@ end
 -- called by 	top_status(xx,Y1,Y2,Yoffset, frameX, "ls10","ls11", "Flaperon","snapflap")
 
 function top_status(xx,Y1,Y2,Yoffset, frameX,theme, layout, lsTop, lsBot,  lsTopLabel, lsBotLabel)
-	local colortmp, xTxt, yTxt1, yTxt2 ,color1, color1Txt,color2,color2Txt, color,colorTxt
-	local fontButtonSize = txtSize.sml
-	local xTxt = xx+layout.width01/2
-	--colortmp = theme.c_indOn
-	
-	local rectHeight = 50-Y1					-- height in %
-	--yTxt1 = Yoffset+Y1+(Y2-Y1)/255
-	--yTxt2 = Yoffset+Y2+4+(Y2-Y1)/255
-	yTxt1 = Yoffset+rectHeight*0.03			-- yPos 1
-	yTxt2 = Yoffset+Y2+rectHeight*0.03		-- yPos 2
-
 	local status1,status2
+	if pcall (function() status1=lsTop:value() status2=lsBot:value() end)	  then
+		local colortmp, xTxt, yTxt1, yTxt2 ,color1, color1Txt,color2,color2Txt, color,colorTxt
+		local fontButtonSize = txtSize.sml
+		local xTxt = xx+layout.width01/2
+		--colortmp = theme.c_indOn
+		
+		local rectHeight = 50-Y1					-- height in %
+		--yTxt1 = Yoffset+Y1+(Y2-Y1)/255
+		--yTxt2 = Yoffset+Y2+4+(Y2-Y1)/255
+		yTxt1 = Yoffset+rectHeight*0.03			-- yPos 1
+		yTxt2 = Yoffset+Y2+rectHeight*0.03		-- yPos 2
+
+		--local status1,status2
 
 
-	if lsTop ~= nil then																				
-		--local lsNumTop = tonumber(string.sub(lsTop,3,6))
-		--local lsNumBot = tonumber(string.sub(lsBot,3,6))
-		status1	= lsTop:value()
-		status2	= lsBot:value()	
-	--else																								-- use lsw name
-	--	status1	= system.getSource({category=CATEGORY_LOGIC_SWITCH, name="flaperon"}):value()
-	--	status2	= system.getSource({category=CATEGORY_LOGIC_SWITCH, name="snapflp"}):value()
-	
+		--if lsTop ~= nil then																				
+			--local lsNumTop = tonumber(string.sub(lsTop,3,6))
+			--local lsNumBot = tonumber(string.sub(lsBot,3,6))
+		--	status1	= lsTop:value()
+		--	status2	= lsBot:value()	
+		--else																								-- use lsw name
+		--	status1	= system.getSource({category=CATEGORY_LOGIC_SWITCH, name="flaperon"}):value()
+		--	status2	= system.getSource({category=CATEGORY_LOGIC_SWITCH, name="snapflp"}):value()
+		
+	--	end
+		-- colors, status dependent:
+		
+		color1 			= theme.c_indOn
+		color1Txt		= theme.c_textindOn
+		color2			= theme.c_indOff
+		color2Txt		= theme.c_textindOff
+		--frame.drawFilledRectangleRnd(xx,Yoffset+Y1,layout.width01,Yoffset+Y2-Y1-10, frameX,8)
+		
+		lcd.font(fontButtonSize)
+		color,colorTxt = getColor(status1,theme)
+		lcd.color(color)
+		frame.drawFilledRectangleRnd(xx,Yoffset,layout.width01,rectHeight, frameX,8)
+		lcd.color(colorTxt)
+		frame.drawText(	xTxt, yTxt1,   lsTopLabel,  CENTERED,  frameX)
+		
+		color,colorTxt = getColor(status2,theme)
+		--colortmp = theme.c_indOff
+		lcd.color(color)
+		--frame.drawFilledRectangleRnd(xx,Yoffset+Y2,layout.width01,Yoffset+Y2-Y1-10, frameX,8)
+		frame.drawFilledRectangleRnd(xx,Yoffset+Y2,layout.width01,rectHeight, frameX,8)
+		
+		lcd.color(colorTxt)
+		lcd.font(fontButtonSize)
+		--xTxt = xx+0.3
+
+		
+		frame.drawText(	xTxt, yTxt2,  lsBotLabel,  CENTERED ,  frameX)
+	else
+		print("failure TOBSTATUS lsw definition")
 	end
-	-- colors, status dependent:
-	
-	color1 			= theme.c_indOn
-	color1Txt		= theme.c_textindOn
-	color2			= theme.c_indOff
-	color2Txt		= theme.c_textindOff
-	--frame.drawFilledRectangleRnd(xx,Yoffset+Y1,layout.width01,Yoffset+Y2-Y1-10, frameX,8)
-	
-	color,colorTxt = getColor(status1,theme)
-	lcd.color(color)
-	frame.drawFilledRectangleRnd(xx,Yoffset,layout.width01,rectHeight, frameX,8)
-	lcd.color(colorTxt)
-	frame.drawText(	xTxt, yTxt1,   lsTopLabel,  CENTERED,  frameX)
-	
-	color,colorTxt = getColor(status2,theme)
-	--colortmp = theme.c_indOff
-	lcd.color(color)
-	--frame.drawFilledRectangleRnd(xx,Yoffset+Y2,layout.width01,Yoffset+Y2-Y1-10, frameX,8)
-	frame.drawFilledRectangleRnd(xx,Yoffset+Y2,layout.width01,rectHeight, frameX,8)
-	
-	lcd.color(colorTxt)
-	lcd.font(fontButtonSize)
-	--xTxt = xx+0.3
-
-	
-	frame.drawText(	xTxt, yTxt2,  lsBotLabel,  CENTERED ,  frameX)
-
 end
 
 
@@ -267,107 +272,111 @@ end
 -- ***********   					show safety switch status
 
 function top_safety(xx,Y1,Yoffset, frameX,theme,layout,appTxt,	lsMotSafe,lsMotRunning,	param)
+		local condSafe		=  false
+		local condRunning	=  false
+		
+	if pcall(function() condRunning=(lsMotRunning:value() >0)   condSafe=(lsMotSafe:value()>0) end ) then
+		local condArmed 	=  false
+		local condAlarm		=  false
 
-	local condSafe		=  false
-	local condArmed 	=  false
-	local condAlarm		=  false
-	local condRunning	=  false
-	
-	local safety,engineStatus
-	
-	local fontButtonSize = txtSize.sml
-	
-	if system.getLocale() =="de" then
-		lan = 1
+		
+		local safety,engineStatus
+		
+		local fontButtonSize = txtSize.sml
+		
+		if system.getLocale() =="de" then
+			lan = 1
+		else
+			lan = 2 																		-- not supported language, so has to be "en" 
+		end
+		
+		if pcall( function ()initSfty(param["TOP_SaftyInit"]) end) then
+			-- OK
+		else
+			-- one time initialisation
+			param["TOP_SaftyInit"] = 1			-- flag "one time run" parameter
+			param["TOP_SafetyTime"] = 0			-- flag "one time run" parameter
+		end
+		
+
+		
+	--	condRunning		= (lsMotRunning:value() >0)								-- eval if motor input will deliver "run" status
+	--	condSafe 		= (lsMotSafe:value()	>0) and not(condRunning)		-- eval if safety/kill switch is active & "disconnects" any motor inputs
+		condArmed		= not(condSafe) 			and not(condRunning)		-- eval if safety switch is inactive but no motor input recognized
+		condAlarm		= condSafe 					and condRunning				-- eval if tx outputs "motor: run", only rx switched off state prevents engine from start
+
+
+		
+
+		
+		local xTxt = xx+layout.width02/2			-- y centerline
+		local yTxt1 = 15
+		local yTxt2 = 30
+		if condRunning then
+			colortmp = theme.c_statusAlarm
+			
+			lcd.color(colortmp)
+			frame.drawFilledRectangleRnd(xx,Yoffset,layout.width02,95, frameX,8)
+			
+			lcd.color(theme.c_textStd)
+			lcd.font(fontButtonSize)
+			frame.drawText(	xTxt, yTxt1,  appTxt.motorON[lan], CENTERED ,  frameX)
+			
+		elseif condAlarm then
+			local  tmp = os.clock()
+			local colorT={}
+			local colorR={}
+			local colIndex = 1
+			colorR[1] = theme.c_statusAlarm
+			colorT[1] = theme.c_textStd
+			colorR[2] = theme.c_statusWarn
+			colorT[2] = theme.c_textRed
+			
+			tmp = os.clock()
+			if tmp-param.TOP_SafetyTime > 0.5 then
+					soundAlarm()
+
+				-- beep
+				param.TOP_SafetyTime = tmp
+				colIndex = math.abs(colIndex-1)						-- toggle colors
+			 end	
+			 
+			 
+			colortmp = colorR[colIndex+1]			
+			lcd.color(colortmp)
+			frame.drawFilledRectangleRnd(xx,Yoffset,layout.width02,95, frameX,8)
+
+			colortmp = colorT[colIndex+1]	
+			lcd.color(colortmp)
+			lcd.font(fontButtonSize)
+			frame.drawText(	xTxt, yTxt1,  appTxt.motorOn[lan], CENTERED ,  frameX)
+
+
+			 
+		elseif condArmed then
+			colortmp = theme.c_statusPrewarn
+			lcd.color(colortmp)
+			frame.drawFilledRectangleRnd(xx,Yoffset,layout.width02,95, frameX,8)
+			
+			lcd.color(theme.c_textRed)
+			lcd.font(fontButtonSize)
+			frame.drawText(	xTxt, yTxt2,  appTxt.motorArmed[lan], CENTERED  ,  frameX)
+		
+		
+		
+		else
+			colortmp = theme.c_statusOKOK
+			lcd.color(colortmp)
+			frame.drawFilledRectangleRnd(xx,Yoffset,layout.width02,95, frameX,8)
+			
+			lcd.color(theme.c_textStd)
+			lcd.font(fontButtonSize)
+			frame.drawText(	xTxt, yTxt2,  appTxt.motorSafe[lan], CENTERED  ,  frameX)	
+		
+		end
 	else
-		lan = 2 																		-- not supported language, so has to be "en" 
+		print("failure TOPSAFETY: ls definition")
 	end
-	
-	if pcall( function ()initSfty(param["TOP_SaftyInit"]) end) then
-		-- OK
-	else
-		-- one time initialisation
-		param["TOP_SaftyInit"] = 1			-- flag "one time run" parameter
-		param["TOP_SafetyTime"] = 0			-- flag "one time run" parameter
-	end
-	
-
-
-	condRunning		= (lsMotRunning:value() >0)								-- eval if motor input will deliver "run" status
-	condSafe 		= (lsMotSafe:value()	>0) and not(condRunning)		-- eval if safety/kill switch is active & "disconnects" any motor inputs
-	condArmed		= not(condSafe) 			and not(condRunning)		-- eval if safety switch is inactive but no motor input recognized
-	condAlarm		= condSafe 					and condRunning				-- eval if tx outputs "motor: run", only rx switched off state prevents engine from start
-
-
-	
-
-	
-	local xTxt = xx+layout.width02/2			-- y centerline
-	local yTxt1 = 15
-	local yTxt2 = 30
-	if condRunning then
-		colortmp = theme.c_statusAlarm
-		
-		lcd.color(colortmp)
-		frame.drawFilledRectangleRnd(xx,Yoffset,layout.width02,95, frameX,8)
-		
-		lcd.color(theme.c_textStd)
-		lcd.font(fontButtonSize)
-		frame.drawText(	xTxt, yTxt1,  appTxt.motorON[lan], CENTERED ,  frameX)
-		
-	elseif condAlarm then
-		local  tmp = os.clock()
-		local colorT={}
-		local colorR={}
-		local colIndex = 1
-		colorR[1] = theme.c_statusAlarm
-		colorT[1] = theme.c_textStd
-		colorR[2] = theme.c_statusWarn
-		colorT[2] = theme.c_textRed
-		
-		tmp = os.clock()
-		if tmp-param.TOP_SafetyTime > 0.5 then
-				soundAlarm()
-
-			-- beep
-			param.TOP_SafetyTime = tmp
-			colIndex = math.abs(colIndex-1)						-- toggle colors
-		 end	
-		 
-		 
-		colortmp = colorR[colIndex+1]			
-		lcd.color(colortmp)
-		frame.drawFilledRectangleRnd(xx,Yoffset,layout.width02,95, frameX,8)
-
-		colortmp = colorT[colIndex+1]	
-		lcd.color(colortmp)
-		lcd.font(fontButtonSize)
-		frame.drawText(	xTxt, yTxt1,  appTxt.motorOn[lan], CENTERED ,  frameX)
-
-
-		 
-	elseif condArmed then
-		colortmp = theme.c_statusPrewarn
-		lcd.color(colortmp)
-		frame.drawFilledRectangleRnd(xx,Yoffset,layout.width02,95, frameX,8)
-		
-		lcd.color(theme.c_textRed)
-		lcd.font(fontButtonSize)
-		frame.drawText(	xTxt, yTxt2,  appTxt.motorArmed[lan], CENTERED  ,  frameX)
-	
-	
-	
-	else
-		colortmp = theme.c_statusOKOK
-		lcd.color(colortmp)
-		frame.drawFilledRectangleRnd(xx,Yoffset,layout.width02,95, frameX,8)
-		
-		lcd.color(theme.c_textStd)
-		lcd.font(fontButtonSize)
-		frame.drawText(	xTxt, yTxt2,  appTxt.motorSafe[lan], CENTERED  ,  frameX)	
-	
-	end
-
 	return (param)
 end
 

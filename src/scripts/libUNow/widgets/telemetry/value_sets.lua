@@ -18,8 +18,8 @@ function getValueSet(index)
 		rows=5,												-- overall layout; max number of rows
 		{					
 			{"General 1/3"},								-- page 1
-			{"TxBt","alt"},
-			{"VFR","rssi"},				
+			{"Dist","alt"},
+			{"SBecV","EscT"},				
 			{"EscV","CConN"},
 --			{"Timer1","Ccon"},
 			{"GPS+"}
@@ -33,7 +33,7 @@ function getValueSet(index)
 			{"Erpm","RxBt"}
 		},	
 		
-		{	{"GPS 3/3"},								-- page 3
+		{	{"GPS 3/3"},									-- page 3
 			{"Dist","GSpd"},
 			{"GAlt","Hdg"},
 			{"nSat","HDOP"},

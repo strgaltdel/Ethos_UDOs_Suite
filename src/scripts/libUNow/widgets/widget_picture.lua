@@ -41,12 +41,13 @@
 -- picture1				not used
 -- setCurve				not used
 -- **************************************************************************************************
-
-
+local TMRidx <const> = 3		-- subconf index timer display enabled
+local COLidx <const> = 4		-- subconf index timer color
 
 local imagePath <const> = "/images/"
 
 function pic1_frontendConfigure(subConf,widget)
+
 	if subConf[1]~= nil and subConf[2]~= nil then
 		widget.modelpic = {
 			mdl 	= lcd.loadBitmap(imagePath .. "models/" 		.. subConf[1]..".png"),
@@ -54,8 +55,7 @@ function pic1_frontendConfigure(subConf,widget)
 			refresh = true
 			}
 	end
-	--print("img model:",imagePath .. "models/" 		.. subConf[1]..".png")
-	--print("img BG   :",imagePath .. "background/" 	.. subConf[2]..".png")
+
 	return true
 end
 
@@ -64,8 +64,6 @@ local function drawPic(modelpic,frameX)
 	if modelpic~=nil then
 		if modelpic.back ~= nil then
 			frame.drawBitmap(0,0,modelpic.back,100,100,frameX)	
-			--frame.drawBitmap(0,0,modelpic.back, 0,10,frameX)	
---			lcd.drawBitmap(300,20,modelpic.back, 0,250)	
 		end		
 		if modelpic.mdl ~= nil then
 			frame.drawBitmap(0,0,modelpic.mdl,100,100,frameX)
@@ -75,15 +73,17 @@ local function drawPic(modelpic,frameX)
 end
 
 
-local function drawTmr(frameX,color)
-	local t1 = model.getTimer(0):value()
-	local t2 = model.getTimer(1):value()	
+local function drawTmr(frameX,color,go1,go2)
 	lcd.color(color)
 	lcd.font(FONT_XL)	
-	--frame.drawText(frameX.w *0.95,	frameX.h*0.02,  timer2strg(t1),  RIGHT ,	frameX)
+
+
+	local t1 = model.getTimer(0):value()
 	frame.drawText(95,	10,  timer2strg(t1),  RIGHT ,	frameX)
+	
+	local t2 = model.getTimer(1):value()
 	frame.drawText(95,	78,  timer2strgM(t2),  RIGHT,	frameX)
---	print("T1",timer2strg(t1) )
+
 	return true
 end
 
@@ -96,15 +96,18 @@ function main_Picture(frameX,page,layout,theme,touch,evnt,subConf,appConfigured,
 	-- ***************************    "init"       *********************************************************
 	if not(appConfigured) then												-- one time config; cant be executed during create cause window size not availabe then
 		appConfigured = pic1_frontendConfigure(subConf,widget)
---		lcd.invalidate()
+
 	end	
---	lcd.invalidate()
+
 	--  ***************     "paint"     **********************
 	if widget.modelpic~=nil then
 		widget.modelpic.refresh = drawPic(widget.modelpic,frameX)
 	end
 	
-	--drawTmr(frameX,BLACK)
+	if subConf[TMRidx] then
+		local colTimer = subConf[COLidx]
+		drawTmr(frameX,colTimer)
+	end
 	
 	return(appConfigured)		
 end

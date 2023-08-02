@@ -212,38 +212,38 @@ function getSubForm(index,txt,lang)												-- only for apps, not used for to
 	local subFrm= {}
 
 	if index ==w_Picture then
---		print("sample1",txt.conf[1][lang])
---		print("sample2",txt.conf[2][lang])
 		subFrm= {		
-			{txt.conf[1][lang], 	"createFilePicker",		nil,	"/images/models",			"any",		default="Storm"},
-			{txt.conf[2][lang], 	"createFilePicker",		nil,	"/images/background", 		"any",		default="Simmel"		}
+			{txt.conf[1][lang], 	"createFilePicker",			nil,	"/images/models",			"any",		default="Alpina"	},
+			{txt.conf[2][lang], 	"createFilePicker",			nil,	"/images/background", 		"any",		default="SimmelH"	},
+			{txt.conf[3][lang], 	"createBooleanField",		nil,	true,									default=true		},
+			{txt.conf[4][lang], 	"createColorPicker",		nil,	1, 										default=WHITE},
 			}			
 	elseif index == w_SETCURVE then
 		subFrm= {
-			{txt.conf[1][lang], 	"createCurveChoice",		nil,	1,	 	{{dummy,1},{dummy,2}},	default=1	},	
-			{txt.conf[2][lang], 	"createSourceField",		nil,	1,	 	{{dummy,1},{dummy,2}},	default= system.getSource({name="Throttle", category = CATEGORY_ANALOG})	},
-			{txt.conf[3][lang],		"createChoiceField",		nil,	1,	 	{{"Pot1",1},{"Pot2",2},{"Pot3",3},{"Pot4",4},{"Slider Left",5},{"Slider Right",6}}	,default=5	},	
-			{txt.conf[4][lang],		"createChoiceField",		nil,	1,		{{"SH",1},{"SI",2},{"SJ",3},{"Trim5",4},{"Trim6",5}}			,default=4		},
-			{txt.conf[5][lang],		"createSwitchField",		nil,	1,	 	default= system.getSource({member = 5, category = CATEGORY_SWITCH_POSITION})								}	
+			{txt.conf[1][lang], 	"createCurveChoice",		nil,	1,	 	{{dummy,1},{dummy,2}},																	default=1	},	
+			{txt.conf[2][lang], 	"createSourceField",		nil,	1,	 	{{dummy,1},{dummy,2}},																	default= system.getSource({name="Throttle", category = CATEGORY_ANALOG})	},
+			{txt.conf[3][lang],		"createChoiceField",		nil,	1,	 	{{"Pot1",1},{"Pot2",2},{"Pot3",3},{"Pot4",4},{"Slider Left",5},{"Slider Right",6}},		default=5	},	
+			{txt.conf[4][lang],		"createChoiceField",		nil,	1,		{{"SH",1},{"SI",2},{"SJ",3},{"Trim5",4},{"Trim6",5}},									default=4		},
+			{txt.conf[5][lang],		"createSwitchField",		nil,	1,	 																							default= system.getSource({member = 5, category = CATEGORY_SWITCH_POSITION})}	
 
 	
 			}
 	elseif index == w_MODELFIND then
 		subFrm= {	
-			{txt.conf[1][lang], 	"createBooleanField",		nil,	true	,default=true	},					-- testmode
+			{txt.conf[1][lang], 	"createBooleanField",		nil,	true,																							default=true	},					-- testmode
 			}
 	elseif index == w_TELE01  then
 		subFrm= {	
-			{txt.conf[1][lang], 	"createBooleanField",		nil,	true	,default=true	},																					-- testmode
-			{txt.conf[2][lang],		"createChoiceField",		nil,	1,	 	{{"Neuron & oXs",1},{"YGE & oXs",2},{"oXs (GPS)",2},{"G-Rx",2},{"minimal",2}}	,default=1	},		-- choose Sensor set
+			{txt.conf[1][lang], 	"createBooleanField",		nil,	true	,																						default=true	},																					-- testmode
+			{txt.conf[2][lang],		"createChoiceField",		nil,	1,	 	{{"Neuron & oXs",1},{"YGE & oXs",2},{"oXs (GPS)",2},{"G-Rx",2},{"minimal",2}},			default=1	},		-- choose Sensor set
 			}
 	elseif index == w_GVAR  then
 		subFrm= {	
 --			{"TESTmode", 	"createBooleanField",	nil,	true		},					-- testmode		
-			{txt.conf[1][lang], 	"createChoiceField",		nil,	1,	 	{{"Std Electro",1},{"Std Glider",2},{"Scale1",3},{"Scale2",4}}	,default=1	},	
-			{txt.conf[2][lang],		"createChoiceField",		nil,	1,	 	{{"Pot1",1},{"Pot2",2},{"Slider Left",3},{"Slider Right",4}}	,default=3	},	
-			{txt.conf[3][lang],		"createChoiceField",		nil,	1,		{{"SH",1},{"SI",2},{"SJ",3},{"Trim5",4},{"Trim6",5}}			,default=4	},
-			{txt.conf[4][lang],		"createSwitchField",		nil,	1,	 	default= system.getSource({member = 5, category = CATEGORY_SWITCH_POSITION})}
+			{txt.conf[1][lang], 	"createChoiceField",		nil,	1,	 	{{"Std Electro",1},	{"Std Glider",2},	{"Scale1",3},		{"Scale2",4}}	,						default=1	},	
+			{txt.conf[2][lang],		"createChoiceField",		nil,	1,	 	{{"Pot1",1},		{"Pot2",2},			{"Slider Left",3},	{"Slider Right",4}},					default=3	},	
+			{txt.conf[3][lang],		"createChoiceField",		nil,	1,		{{"SH",1},			{"SI",2},			{"SJ",3},			{"Trim5",4},		{"Trim6",5}},		default=4	},
+			{txt.conf[4][lang],		"createSwitchField",		nil,	1,	 																										default= system.getSource({member = 5, category = CATEGORY_SWITCH_POSITION})}
 			}
 	elseif index == w_DEMO  then
 		subFrm= {	
@@ -252,14 +252,13 @@ function getSubForm(index,txt,lang)												-- only for apps, not used for to
 			}
 	elseif index == w_TopFull  then
 		subFrm= {	
-			{"Status1, LSW:", 								"createLswChoice",			nil,	1,		{{dummy,1},},								default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="flaperon"})	},																					-- testmode
---			{"Status1, LSW:", 							"createSourceField",		nil,	1,		{{dummy,1},{dummy,2}},						default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="flaperon"})	},																					-- testmode
-			{"Status1, label",								"createTextField",			nil,	1,	 												default="flperon"	},											
-			{"Status2, LSW:", 								"createSourceField",		nil,	1,		{{dummy,1},},								default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="snapflp"})	},																						-- testmode
-			{"Status2, label",								"createTextField",			nil,	1,	 												default="snpflap"	},	
-			{"Motor Safety ..status \"safe\", LSW:",		"createLswChoice",			nil,	1,		{{dummy,1},},								default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="Safe Mstr"})	},																						-- testmode
-			{"               ..status \"pre-engaged\", LSW:","createLswChoice",			nil,	1,		{{dummy,1},},								default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="Mot Warning"})	},																						-- testmode
-			{"               ..status \"running\", LSW:",	"createLswChoice",			nil,	1,		{{dummy,1},},								default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="Motor running"})	},																						-- testmode
+			{"Status1, LSW:", 									"createLswChoice",		nil,	1,		{{dummy,1},},	default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="LS Flaperon"})	},																					-- testmode																				-- testmode
+			{"Status1, label",									"createTextField",		nil,	1,	 					default="flperon"	},											
+			{"Status2, LSW:", 									"createLswChoice",		nil,	1,		{{dummy,1},},	default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="LS Snapflap"})	},																						-- testmode
+			{"Status2, label",									"createTextField",		nil,	1,	 					default="snpflap"	},	
+			{"Motor Safety ..status \"SAFE\",LSW:",				"createLswChoice",		nil,	1,		{{dummy,1},},	default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="Sfty Mot disarm"})},																						-- testmode
+			{"               ..status \"WARN/pre-engaged\",LSW:","createLswChoice",		nil,	1,		{{dummy,1},},	default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="Mot Warning"})	},																						-- testmode
+			{"               ..status \"RUNNING\", LSW:",		"createLswChoice",		nil,	1,		{{dummy,1},},	default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="Motor running"})	},																						-- testmode
 			
 
 			}

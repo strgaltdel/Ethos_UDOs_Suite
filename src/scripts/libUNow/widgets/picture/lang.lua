@@ -11,7 +11,9 @@ local txt_Fields = {
 --  config Form	
 	conf	= 	{
 				{"      Modell-Bild",				"     Model File"			},
-				{"      Hintergrund",				"     Background"			}
+				{"      Hintergrund",				"     Background"			},
+				{"      Timer Anzeige",				"     Timer display"		},
+				{"      Timer Farbe",				"     Timer color"			},
 				}
 
 }
