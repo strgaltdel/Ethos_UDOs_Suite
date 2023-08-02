@@ -2,13 +2,13 @@
 
 for Ethos Tandem Transmitters
 
-BETA 0.80
+BETA 0.81
 
 not for productive use
 
 tests only
 
-30 July 2023
+August 2023
 
 
 
