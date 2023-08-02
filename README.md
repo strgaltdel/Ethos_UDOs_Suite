@@ -1,9 +1,6 @@
 #                                           UDOs Suite
 
-
-
-or Ethos Tandem Transmitters
-
+for Ethos Tandem Transmitters
 
 BETA 0.8
 
@@ -12,12 +9,12 @@ not for productive use
 tests only
 
 
-![3in1 title](https://raw.githubusercontent.com/strgaltdel/Ethos-ModelFinder/master/img/title.png)
-### An Ethos widget to display GPS coordinates as a QR code for easy location tracking via mobile phone.
+![3in1 title](https://raw.githubusercontent.com/strgaltdel/Ethos_UDOs_Suite/blob/Beta-0.8/doc/suite.png)
+### This is a collection of small Ethos applications.
+
+
 July 2023
 
-
-This is a collection of small Ethos applications.
 
 
 Unlike conventional widgets, they are called via a  "wrapper", so it is possible to run up to three apps simultaneously in one widget frame.
