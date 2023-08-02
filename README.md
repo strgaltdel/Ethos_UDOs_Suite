@@ -9,7 +9,7 @@ not for productive use
 tests only
 
 
-![3in1 title](https://raw.githubusercontent.com/strgaltdel/Ethos_UDOs_Suite/blob/Beta-0.8/doc/suite.png)
+![3in1 title](https://github.com/strgaltdel/Ethos_UDOs_Suite/blob/Beta-0.8/doc/suite.png)
 ### This is a collection of small Ethos applications.
 
 
