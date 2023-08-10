@@ -256,7 +256,8 @@ function getSubForm(index,txt,lang)												-- only for apps, not used for to
 			{"Status1, label",									"createTextField",		nil,	1,	 					default="flperon"	},											
 			{"Status2, LSW:", 									"createLswChoice",		nil,	1,		{{dummy,1},},	default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="LS Snapflap"})	},																						-- testmode
 			{"Status2, label",									"createTextField",		nil,	1,	 					default="snpflap"	},	
-			{"Motor Safety ..status \"SAFE\",LSW:",				"createLswChoice",		nil,	1,		{{dummy,1},},	default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="Sfty Mot disarm"})},																						-- testmode
+			{"VFR",												"createBooleanField",	nil,	true,					default=true	},																					-- display VFR / access feature	
+			{"Motor Safety ..status \"SAFE\",LSW:",				"createLswChoice",		nil,	1,		{{dummy,1},},	default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="Safe Mot disarm"})},																						-- testmode
 			{"               ..status \"WARN/pre-engaged\",LSW:","createLswChoice",		nil,	1,		{{dummy,1},},	default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="Mot Warning"})	},																						-- testmode
 			{"               ..status \"RUNNING\", LSW:",		"createLswChoice",		nil,	1,		{{dummy,1},},	default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="Motor running"})	},																						-- testmode
 			
@@ -325,7 +326,7 @@ function defineSuite_Layout(display)
 		["topX2"] 		= 	15,
 		["topX3"] 		= 	29,
 		["topX4"] 		= 	35,					-- name
-		["topX5"]		= 	56,					-- batt
+		["topX5"]		= 	53,					-- batt
 		["topX6"]		= 	82,					-- rssi
 		
 		-- button specific

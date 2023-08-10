@@ -26,9 +26,25 @@
 -- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 -- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
--- Feb 2023
--- Rev 1.1
+-- Aug 2023
+-- Rev 1.2
 
+local OK <const> 		= 1
+local WARNING <const>	= 2
+local ALARM <const> 	= 3
+
+	
+-- calculate Bat status 
+function calcBat(voltage,voltMin,voltMax)
+	local status
+	local percent = (1-(voltMax-voltage)/(voltMax-voltMin))*100
+
+	if		percent < 20 then 	return ALARM		
+	elseif 	percent < 50 then 	return WARNING	
+	else 						return OK		
+	end
+	
+end
 
 function drawBat_H(x,y,width,height,thick,frameX,batmin,batmax,data)					-- display telemetry values; sizing in standard 2x4 arrangement (2 cols / 4 rows)
 	local col_frame		= lcd.RGB(255, 255, 255)
@@ -55,14 +71,24 @@ end
 
 
 
-function drawBat_V(x,y,width,height,thick,frameX,batmin,batmax,data)					-- display telemetry values; sizing in standard 2x4 arrangement (2 cols / 4 rows)
-	if batOK_bmp== nil then 
-		batOK_bmp = lcd.loadBitmap("/scripts/libUNow/bmp/Batt1.png")
-		batWarn_bmp = lcd.loadBitmap("/scripts/libUNow/bmp/Batt3.png")
-		batAlarm_bmp = lcd.loadBitmap("/scripts/libUNow/bmp/Batt3.png")
-	end
-	local percent = (data-batmin)/(batmax-batmin)*100										-- "capacity" in percent
+function drawBat_V(x,y,width,height,thick,frameX,voltMin,voltMax,voltage)
+					-- display telemetry values; sizing in standard 2x4 arrangement (2 cols / 4 rows)
 
+	if bmp_bat== nil then 
+		local bmpPath <const> = "/scripts/libUNow/bmp/"
+		bmp_bat	={}
+		bmp_bat[OK] 	= lcd.loadBitmap(bmpPath .. "Batt1.png")
+		bmp_bat[WARNING]= lcd.loadBitmap(bmpPath .. "Batt2.png")
+		bmp_bat[ALARM] 	= lcd.loadBitmap(bmpPath .. "Batt3.png")
+	end
+	
+	local batStatus = calcBat(voltage,voltMin,voltMax)
+	frame.drawBitmap(x,y,bmp_bat[batStatus],width,height, frameX)
+	
+	--[[
+	local percent = (voltage-batmin)/(batmax-batmin)*100										-- "capacity" in percent
+
+	
 	--print("draw BatV",x,y,percent)
 	if percent <15 then
 	--	frame.drawBitmap(x,y,batAlarm_bmp,10,95, frameX)
@@ -74,6 +100,7 @@ function drawBat_V(x,y,width,height,thick,frameX,batmin,batmax,data)					-- disp
 	--	frame.drawBitmap(x,y,batOK_bmp,10,95, frameX)
 	frame.drawBitmap(x,y,batOK_bmp,width,height, frameX)
 	end
+	]]
 end
 
 

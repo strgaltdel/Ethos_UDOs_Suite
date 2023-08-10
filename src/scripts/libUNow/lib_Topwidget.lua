@@ -25,7 +25,31 @@
 -- Rev 0.5, Oct 2022
 
 
-local demoMode <const> = true
+-- local demoMode <const> = true
+local demoMode <const> = false
+
+local OK <const> 		= 1
+local WARNING <const>	= 2
+local ALARM <const> 	= 3
+
+local bmpPath <const> = "/scripts/libUnow/bmp/X18/"
+
+local bmp_rec 	={}
+	bmp_rec[OK] 	= lcd.loadBitmap(bmpPath .. "Ant_ok.png")
+	bmp_rec[WARNING]= lcd.loadBitmap(bmpPath .. "Ant_warn.png")
+	bmp_rec[ALARM] 	= lcd.loadBitmap(bmpPath .. "Ant_alarm.png")
+	
+--[[
+local bmp_rec = {
+				{lcd.loadBitmap("/scripts/libUnow/bmp/X18/Ant_ok.png")},
+				{lcd.loadBitmap("/scripts/libUnow/bmp/X18/Ant_warn.png")},
+				{lcd.loadBitmap("/scripts/libUnow/bmp/X18/Ant_alarm.png") },
+		}
+	
+local bmp_RecOK 	= lcd.loadBitmap("/scripts/libUnow/bmp/X18/Ant_ok.png")
+local bmp_RecWarn 	= lcd.loadBitmap("/scripts/libUnow/bmp/X18/Ant_warn.png")
+local bmp_RecAlarm 	= lcd.loadBitmap("/scripts/libUnow/bmp/X18/Ant_alarm.png") 
+--]]	
 
 -- **************************************************************************************
 -- *****                   several top bar widgets                         **************
@@ -43,32 +67,33 @@ function soundAlarm()
 end
 
 
-function displayTeleTop(sensor,x,y,frameX,theme)					-- display telemetry values; sizing in standard 2x4 arrangement (2 cols / 4 rows)
+
+
+
+
+function displayTeleTop(value,decimals,x,y,frameX,theme)					-- display telemetry values; sizing in standard 2x4 arrangement (2 cols / 4 rows)
 
 	lcd.color(theme.c_textStd)
-	local value, valueStrg
-	
--- ***************************   exception handling **********************************************
-	
---	if sensor.xh == false then										-- exception handler ?
-		if demoMode == true then									-- demo mode ?
-			--if debug7 then print("demoMode print TestVala") end
-			value = sensor.testVal
-		else
-			value = sensor.val
-		end	
 
-		valueStrg = string.format("%." .. sensor.dec .. "f",value)		-- format decimals								
+
+		valueStrg = string.format("%." .. decimals .. "f",value)		-- format decimals								
 		frame.drawText(x, y,  valueStrg, RIGHT ,  frameX)				-- print value
 --	end
 end
 
 
 
-function displayTeleBMP(sensor,x,y,iconsize,frameX,theme)					-- display telemetry values; sizing in standard 2x4 arrangement (2 cols / 4 rows)
+function displayTeleBMP(sensor,x,y,iconsize,frameX,theme,icon)					-- display telemetry values; sizing in standard 2x4 arrangement (2 cols / 4 rows)
 	--print("disp icon x y w h:",x,y, iconsize.width,  iconsize.height)
-	frame.drawBitmap(x,  y,  sensor.bmp,  iconsize.width,  iconsize.height,  frameX)
-	
+
+	if icon == nil then																				-- use std sensor bitmap
+		frame.drawBitmap(x,  y,  sensor.bmp,  iconsize.width,  iconsize.height,  frameX)
+
+		else																							-- use alternate bitmap
+--		if sensors.name == "RSSI" then
+			frame.drawBitmap(x,  y,  icon,  iconsize.width,  iconsize.height,  frameX)
+--		end
+	end
 	--print("BMP",sensor.name,x,y,iconsize.width,iconsize.width,frameX.x,frameX.y,frameX.w,frameX.h)
 	
 end
@@ -79,7 +104,7 @@ end
 -- **************************************************************************************
 
 
-
+--[[
 -- ***********   					receiver strength
 
 function top_RecStrenght(xx,Y1,Y2,Yoffset, frameX,theme,iconsize)
@@ -93,10 +118,11 @@ function top_RecStrenght(xx,Y1,Y2,Yoffset, frameX,theme,iconsize)
 	lcd.font(txtSize.big)
 	displayTeleTop(sensors["VFR"],xx+3, 		Y1 , frameX,theme, dy)
 --	displayTeleTop(sensors["VFR"],xx+3, 	yTxt1 , frameX,theme, dy)
-	--displayTeleBMP(sensors["rssi"],xx+4, 	Y1 + Yoffset, iconsize, frameX)
-	displayTeleTop(sensors["rssi"],xx+15, 	Y1 , frameX,theme, dy)
+--  displayTeleBMP(sensors["rssi"],xx+4, 	Y1 + Yoffset, iconsize, frameX)
 --	displayTeleTop(sensors["rssi"],xx+15, yTxt2 , frameX,theme, dy)
-	displayTeleBMP(sensors["RxBt"],xx+1, 	Yoffset, iconsize, frameX,theme)
+
+--	displayTeleTop(sensors["rssi"],xx+15, 	Y1 , frameX,theme, dy)
+--	displayTeleBMP(sensors["RxBt"],xx+1, 	Yoffset, iconsize, frameX,theme)
 	
 	
 	lcd.color(theme.c_textgrey1)
@@ -106,17 +132,39 @@ function top_RecStrenght(xx,Y1,Y2,Yoffset, frameX,theme,iconsize)
 	
 	
 end
-
+--]]
 
 -- **************************************************************************************
 -- *************************      top bar   widgets      ********************************
 -- **************************************************************************************
 
+-- helper: determine warn level
+local function statusRec(vfrVal,rssiVal)
+	local status
+	if vfrVal < 50 or rssiVal < 45 then
+		status = ALARM
+	elseif vfrVal < 70 or rssiVal < 65 then
+		status = WARNING		
+	else
+		status = OK
+	end
+	return status
+end
 
+-- helper: get telemetry or simulated value
+function getTopValue(sensor)
+	local value
+	if demoMode == true then									-- demo mode ?
+			value = sensor.testVal
+	else
+			value = getTele(sensor.name)
+	end	
+	return value
+end
 
 -- ***********   					receiver strength
 
-function top_RecStrenght2(xx,Y1,Y2,Yoffset, frameX,theme,iconsize,sensors,dispType)
+function top_RecStrenght2(xx,Y1,Y2,Yoffset, frameX,theme,iconsize,sensors,isVFR,dispType)
 	local televal = "rssi"
 	local yTxt1, yTxt2 
 	yTxt1 = Yoffset+Y1+(Y2-Y1)/255
@@ -138,20 +186,32 @@ function top_RecStrenght2(xx,Y1,Y2,Yoffset, frameX,theme,iconsize,sensors,dispTy
 		}
 	else
 		trim ={
-			vfr 	=   2,
-			bmp 	=  0.8,
+			vfr 	=   4,
+			bmp 	=  2,
 			rssi 	=  18,
 			yDelta 	=   8,
 		}
 	
 	end
 	
+	local vfrVal 	= getTele(sensors["VFR"].name)
+	local rssiVal	= getTele(sensors["rssi"].name)
+--	local rssiDec	= sensors["rssi"].dec
+	
+--	local bmpREC = bmp_rec[statusRec(vfrVal,rssiVal)]					-- get warning level and determine corresponding bitmap
+
+	vfrVal 	= 50	+(system.getSource({category=CATEGORY_ANALOG, name="Rudder",  }):value())/1024	*50
+	rssiVal = 50	+(system.getSource({category=CATEGORY_ANALOG, name="Aileron", }):value())/1024	*50
+
+	
+	
 	lcd.color(theme.c_textStd)
 	lcd.font(txtSize.big)
 
-	displayTeleTop(sensors["VFR"], xx+trim.vfr, 	Y1 , frameX,theme, dy)					-- VFR Value
-	displayTeleBMP(sensors["rssi"],xx+trim.bmp, 	Y1 + Yoffset, iconsize, frameX)
-	displayTeleTop(sensors["rssi"],xx+trim.rssi, 	Y1 , frameX,theme, dy)
+--	if isVFR then displayTeleTop(sensors["VFR"], xx+trim.vfr, 	Y1 , frameX,theme, dy)	end				-- VFR Value
+	if isVFR then displayTeleTop(vfrVal,0, xx+trim.vfr, 	Y1 , frameX,theme, dy)	end				-- VFR Value
+	displayTeleBMP(sensors["rssi"],xx+trim.bmp, 	Y1 + Yoffset, iconsize, frameX,theme,bmp_rec[statusRec(vfrVal,rssiVal)])
+	displayTeleTop(rssiVal,0,xx+trim.rssi, 	Y1 , frameX,theme, dy)
 --	displayTeleTop(sensors["rssi"],xx+15, yTxt2 , frameX,theme, dy)
 
 --	displayTeleBMP(sensors["RxBt"],xx+offsBMP, 	Yoffset, iconsize, frameX,theme)
@@ -159,7 +219,7 @@ function top_RecStrenght2(xx,Y1,Y2,Yoffset, frameX,theme,iconsize,sensors,dispTy
 	
 	lcd.color(theme.c_textgrey1)
 	lcd.font(txtSize.Xsml)
-	frame.drawText(xx +trim.vfr  -1, 		87 + trim.yDelta,  "VFR", RIGHT ,  frameX)
+	if isVFR then frame.drawText(xx +trim.vfr  -1, 		87 + trim.yDelta,  "VFR", RIGHT ,  frameX) end
 	frame.drawText(xx +trim.rssi -1, 		87 + trim.yDelta,  "RSSI", RIGHT ,  frameX)	
 	
 	
@@ -383,7 +443,7 @@ end
 
 
 
-
+--[[
 
 
 -- ***********   					Tx/Rx Voltage (vertical Bat)
@@ -415,7 +475,7 @@ function top_BatV(xx,Y1,Y2,Yoffset, frameX,theme, txMin, txMax, txVal, rxMin, rx
 	--drawBat_V2(xx+9.5,Yoffset+1,4,95,2,frameX,rxMin,rxMax,rxVal)
 	
 end
-
+--]]
 
 
 
@@ -446,10 +506,13 @@ function top_BatV2(xx,Y1,Y2,Yoffset, frameX,theme, txMin, txMax, txVal, rxMin, r
 		}
 	
 	end
---sensors = defineSensors(widget)
+	
+	-- txVal = 8+(system.getSource({category=CATEGORY_ANALOG, name="Throttle", }):value())/1024
+	-- rxVal = 5.2+(system.getSource({category=CATEGORY_ANALOG, name="Elevator", }):value())/2048
+
 -- TX
 	lcd.color(theme.c_textStd)
-	displayTeleTop(sensors["TxBt"],	xx+2.9, 		Y1+trim.yOff , frameX,theme)			-- PRINT VALUE
+	displayTeleTop(txVal,1,	xx+2.9, 		Y1+trim.yOff , frameX,theme)			-- PRINT VALUE
 	
 	lcd.color(theme.c_textgrey1)
 	lcd.font(txtSize.sml)	
@@ -463,7 +526,7 @@ function top_BatV2(xx,Y1,Y2,Yoffset, frameX,theme, txMin, txMax, txVal, rxMin, r
 	if rxVal > rxMax then rxVal= rxMax end
 	lcd.font(txtSize.sml)
 	lcd.color(theme.c_textStd)	
-	displayTeleTop(sensors["RxBt"],	xx+offsRx, 	Y1 +trim.yOff, frameX,theme)				-- PRINT VALUE
+	displayTeleTop(rxVal,1,	xx+offsRx, 	Y1 +trim.yOff, frameX,theme)				-- PRINT VALUE
 	
 	lcd.color(theme.c_textgrey1)	
 	lcd.font(txtSize.sml)
@@ -495,11 +558,11 @@ function top_BatH(xx,Y1,Y2,Yoffset, frameX,theme, txMin, txMax, txVal, rxMin, rx
 	frame.drawText(xx+0, 	Y1,  "Tx:", RIGHT ,  frameX)	
 	frame.drawText(xx+12, 	Y1,  "Rx:", RIGHT ,  frameX)
 
-	displayTeleTop(sensors["TxBt"],xx+6, 		Y1, frameX,theme)
+	displayTeleTop(txVal,1,xx+6, 		Y1, frameX,theme)
 	drawBat_H(xx-3,Y2,batlength,50,2,frameX,txMin, txMax, txVal)
 	
 
-	displayTeleTop(sensors["RxBt"],xx+16, 	Y1, frameX,theme)	
+	displayTeleTop(rxVal,1,xx+16, 	Y1, frameX,theme)	
 	drawBat_H(xx+8,Y2,batlength,50,2,frameX,rxMin, rxMax, rxVal)
 
 end

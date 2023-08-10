@@ -32,10 +32,12 @@ function topfull(frameX,page,dummy,theme,touch,evnt,subConf,appConfigured,appTxt
 
 	local lsBot 			= subConf[3]		-- src LSW
 	local lsBotLabel		= subConf[4]
+
+	local isVFR				= subConf[5]		-- bool VFR to be displayed
 	
-	local lsMotSafe			= subConf[5]		-- src LSW
-	local lsMotArmed		= subConf[6]		-- src LSW
-	local lsMotRunning		= subConf[7]		-- src LSW
+	local lsMotSafe			= subConf[6]		-- src LSW
+	local lsMotArmed		= subConf[7]		-- src LSW
+	local lsMotRunning		= subConf[8]		-- src LSW
 
 	
 	
@@ -49,15 +51,17 @@ function topfull(frameX,page,dummy,theme,touch,evnt,subConf,appConfigured,appTxt
 	local xx,yy	
 	local televal
 	
-	local txMin = 9
-	local txMax = 10.4
-	local txVal = 10.10
-	local rxMin = 4.9
-	local rxMax = 5.5
+	local txMin = 7.5
+	local txMax = 8.6
+	local txVal = 8.1
+	local rxMin = 4.8
+	local rxMax = 5.8
 	local rxVal = 5.0	
 
-	
-	
+	txVal = getTele("TxBt")
+
+	--rxVal = getTele("RxBt")
+	--print("RX:",rxval)
 	
 --	print("*********   para Topfull",subConf[1],subConf[2])
 --	if pcall(sensors["VFR"].name) then
@@ -86,7 +90,7 @@ function topfull(frameX,page,dummy,theme,touch,evnt,subConf,appConfigured,appTxt
 	if pcall(function() if sensors["rssi"].name == "rssi" then end end) then			-- rssi sensor definition ?
 		if sensors["rssi"].bmp== nil then												-- if yes, does bmp exist ?
 
-			print("77 Topsensor: no rssi bmp")
+			--print("77 Topsensor: no rssi bmp")
 			sensors["rssi"].bmp = lcd.loadBitmap(sensors["rssi"].path .. "X20/" .. sensors["rssi"].icon)			
 		end	
 	else
@@ -113,7 +117,7 @@ function topfull(frameX,page,dummy,theme,touch,evnt,subConf,appConfigured,appTxt
 	
 	
 	--  VFR & RSSI
-	top_RecStrenght2(widget.layout.topX6,Y1,Y2,Yoffset, frameX, theme, iconsize,sensors)
+	top_RecStrenght2(widget.layout.topX6,Y1,Y2,Yoffset, frameX, theme, iconsize,sensors,isVFR)
 	
 
 
