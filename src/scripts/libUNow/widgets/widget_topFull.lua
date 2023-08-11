@@ -113,7 +113,7 @@ function topfull(frameX,page,dummy,theme,touch,evnt,subConf,appConfigured,appTxt
 	top_text(widget.layout.topX4,Y1+5,Yoffset, frameX, theme,  widget.layout,model.name(),theme.c_textGreen)	
 
 	-- Bat Tx/Rx
-	top_BatV2(widget.layout.topX5,Y1,Y2,Yoffset, frameX, theme, txMin, txMax, txVal, rxMin, rxMax, rxVal  )
+	top_BatV2(widget.layout.topX5,Y1,Y2,Yoffset, frameX, theme, txVal, rxVal  )
 	
 	
 	--  VFR & RSSI

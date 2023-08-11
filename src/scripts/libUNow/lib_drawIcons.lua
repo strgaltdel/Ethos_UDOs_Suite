@@ -33,7 +33,7 @@ local OK <const> 		= 1
 local WARNING <const>	= 2
 local ALARM <const> 	= 3
 
-	
+--[[	
 -- calculate Bat status 
 function calcBat(voltage,voltMin,voltMax)
 	local status
@@ -45,6 +45,14 @@ function calcBat(voltage,voltMin,voltMax)
 	end
 	
 end
+]]
+function calcBat(voltage,threshold)
+	if 		voltage <= threshold[ALARM] 	then return ALARM
+	elseif	voltage <= threshold[WARNING] 	then return WARNING
+	end
+	return OK
+end
+
 
 function drawBat_H(x,y,width,height,thick,frameX,batmin,batmax,data)					-- display telemetry values; sizing in standard 2x4 arrangement (2 cols / 4 rows)
 	local col_frame		= lcd.RGB(255, 255, 255)
@@ -71,7 +79,7 @@ end
 
 
 
-function drawBat_V(x,y,width,height,thick,frameX,voltMin,voltMax,voltage)
+function drawBat_V(x,y,width,height,thick,frameX,voltage,voltWarnings)
 					-- display telemetry values; sizing in standard 2x4 arrangement (2 cols / 4 rows)
 
 	if bmp_bat== nil then 
@@ -82,7 +90,7 @@ function drawBat_V(x,y,width,height,thick,frameX,voltMin,voltMax,voltage)
 		bmp_bat[ALARM] 	= lcd.loadBitmap(bmpPath .. "Batt3.png")
 	end
 	
-	local batStatus = calcBat(voltage,voltMin,voltMax)
+	local batStatus = calcBat(voltage,voltWarnings)
 	frame.drawBitmap(x,y,bmp_bat[batStatus],width,height, frameX)
 	
 	--[[

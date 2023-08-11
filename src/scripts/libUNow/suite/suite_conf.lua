@@ -413,3 +413,32 @@ function getFrameSizing(WIDGET_MODE,TOPBAR_WID,Dual_WID)
 	return topBarHeight, blank, widgetHeight, widgetWidth
 end
 
+
+
+function defineRxVoltThresholds(name)
+	local rxThres = {}
+	local hvBec = {"Thor","Ventus"}
+	local div 	= {"ASH26","Ventus","Discus"}
+	
+	-- warning/alarm voltage thresholds for std HVbec 
+	for i = 1,#hvBec do
+		if hvBec[i] == name then
+			rxThres = {99,6.2,6.0}					-- okMax,warning, alarm
+			return rxThres
+		end
+	end
+	
+		-- warning/alarm voltage thresholds for group "div" 
+	for i = 1,#div do
+		if div[i] == name then
+			rxThres = {99,7.2,7.0}					-- okMax,warning, alarm
+			return rxThres
+		end
+	end
+		
+		-- warning/alarm voltage thresholds for group "standard" / 4 cell nimh etc.. 
+
+	rxThres = {99,5.1,4.9}					-- okMax,warning, alarm
+	return rxThres
+end
+

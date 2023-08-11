@@ -38,7 +38,13 @@ local bmp_rec 	={}
 	bmp_rec[OK] 	= lcd.loadBitmap(bmpPath .. "Ant_ok.png")
 	bmp_rec[WARNING]= lcd.loadBitmap(bmpPath .. "Ant_warn.png")
 	bmp_rec[ALARM] 	= lcd.loadBitmap(bmpPath .. "Ant_alarm.png")
-	
+
+local rxVoltwarn=defineRxVoltThresholds("test")
+print("rxVoltages:	",rxVoltwarn[2],rxVoltwarn[3])
+
+local txVoltwarn= {99,7.5,7.4}
+
+
 --[[
 local bmp_rec = {
 				{lcd.loadBitmap("/scripts/libUnow/bmp/X18/Ant_ok.png")},
@@ -482,9 +488,10 @@ end
 
 -- ***********   					Tx/Rx Voltage (vertical Bat)
 
-function top_BatV2(xx,Y1,Y2,Yoffset, frameX,theme, txMin, txMax, txVal, rxMin, rxMax, rxVal,dispType)
+--function top_BatV2(xx,Y1,Y2,Yoffset, frameX,theme, txMin, txMax, txVal, rxMin, rxMax, rxVal,dispType)
+function top_BatV2(xx,Y1,Y2,Yoffset, frameX,theme,txVal,rxVal,dispType)
 	local col_txt = lcd.RGB(120, 120, 120)
-	if txVal > txMax then txVal= txMax end
+--	if txVal > txMax then txVal= txMax end
 	lcd.font(txtSize.sml)
 	
 	local batWid = 6
@@ -507,8 +514,8 @@ function top_BatV2(xx,Y1,Y2,Yoffset, frameX,theme, txMin, txMax, txVal, rxMin, r
 	
 	end
 	
-	-- txVal = 8+(system.getSource({category=CATEGORY_ANALOG, name="Throttle", }):value())/1024
-	-- rxVal = 5.2+(system.getSource({category=CATEGORY_ANALOG, name="Elevator", }):value())/2048
+	 txVal = 8+(system.getSource({category=CATEGORY_ANALOG, name="Throttle", }):value())/1024
+	 rxVal = 5.2+(system.getSource({category=CATEGORY_ANALOG, name="Elevator", }):value())/2048
 
 -- TX
 	lcd.color(theme.c_textStd)
@@ -517,13 +524,13 @@ function top_BatV2(xx,Y1,Y2,Yoffset, frameX,theme, txMin, txMax, txVal, rxMin, r
 	lcd.color(theme.c_textgrey1)
 	lcd.font(txtSize.sml)	
 	frame.drawText(		xx+offsTx, 				Y2+trim.yOff+trim.yDelta,   "Tx", LEFT ,  frameX)			-- print LABEL
-	drawBat_V(			xx+ 2.5,				5+trim.yOff,		batWid,bathgt,2,frameX,txMin,txMax,txVal)
+	drawBat_V(			xx+ 2.5,				5+trim.yOff,		batWid,bathgt,2,frameX,txVal,txVoltwarn)
 	
 	--draw vertical Bat symbol (PosX, PosY, width (%), height (%), tickness lines, frame,  minV, maxV, value)
 	--drawBat_V2(xx+5,Yoffset+1,4,95,2,frameX,txMin,txMax,txVal)
 
 -- RX	
-	if rxVal > rxMax then rxVal= rxMax end
+--	if rxVal > rxMax then rxVal= rxMax end
 	lcd.font(txtSize.sml)
 	lcd.color(theme.c_textStd)	
 	displayTeleTop(rxVal,1,	xx+offsRx, 	Y1 +trim.yOff, frameX,theme)				-- PRINT VALUE
@@ -531,7 +538,7 @@ function top_BatV2(xx,Y1,Y2,Yoffset, frameX,theme, txMin, txMax, txVal, rxMin, r
 	lcd.color(theme.c_textgrey1)	
 	lcd.font(txtSize.sml)
 	frame.drawText(		xx+15+trim.xTxt1, 	Y2+trim.yOff+trim.yDelta,  	" Rx", RIGHT ,  frameX)
-	drawBat_V(			xx+6.5,					5+trim.yOff,		batWid,bathgt,2,frameX,rxMin,rxMax,rxVal)
+	drawBat_V(			xx+6.5,					5+trim.yOff,		batWid,bathgt,2,frameX,rxVal,rxVoltwarn)
 	 
 	 
 --	frame.drawText(					xx+14.8 ,	Y2+5,  txt_.Rx, RIGHT ,  frameX)
