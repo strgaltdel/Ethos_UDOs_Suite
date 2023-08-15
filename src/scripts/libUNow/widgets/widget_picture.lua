@@ -82,6 +82,10 @@ local function drawTmr(frameX,color,go1,go2)
 	frame.drawText(95,	10,  timer2strg(t1),  RIGHT ,	frameX)
 	
 	local t2 = model.getTimer(1):value()
+	if t2 < 15 then 
+		if t2 < 0 then 	lcd.color(RED) 
+		else 			lcd.color(YELLOW) end
+	end
 	frame.drawText(95,	78,  timer2strgM(t2),  RIGHT,	frameX)
 
 	return true

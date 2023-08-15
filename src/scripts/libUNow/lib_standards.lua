@@ -33,6 +33,12 @@
 -- *******    introduce an "abstaction" layer to let the main script more independent from underlying LUA *****************
 -- ************************************************************************************************************************
 
+function round(value)
+	value = math.floor(value+0.5)
+	return value
+end
+
+
 function getValue(object)													-- get simple (telemetry) value
 	local src  = system.getSource(object)
 	local value = src:value()
@@ -144,10 +150,21 @@ end
 																			-- ************************************************
 
 function timer2strgM(val)
-	local hour 		= math.floor(val/3600)
+
+	local pre =""
+	local negative = false
+
+	if val < 0 then
+		negative = true
+		val = -1*val
+		pre = "-"
+	end
+	
+	local hour = math.floor(val/3600)	
 	local minute 	= math.floor((val -hour*3600)/60)
 	local second	= val-hour*3600-minute*60
-	local timerStrg  = string.format("   %02d:%02d",minute,second)				-- format decimals
+
+	local timerStrg  = string.format("  "..pre.." %02d:%02d",minute,second)				-- format decimals
 	return timerStrg
 end
 																			-- ************************************************
