@@ -25,7 +25,37 @@
 -- Rev 0.5, Oct 2022
 
 
-local demoMode <const> = true
+-- local demoMode <const> = true
+local demoMode <const> = false
+
+local OK <const> 		= 1
+local WARNING <const>	= 2
+local ALARM <const> 	= 3
+
+local bmpPath <const> = "/scripts/libUnow/bmp/X18/"
+
+local bmp_rec 	={}
+	bmp_rec[OK] 	= lcd.loadBitmap(bmpPath .. "Ant_ok.png")
+	bmp_rec[WARNING]= lcd.loadBitmap(bmpPath .. "Ant_warn.png")
+	bmp_rec[ALARM] 	= lcd.loadBitmap(bmpPath .. "Ant_alarm.png")
+
+local rxVoltwarn=defineRxVoltThresholds("test")
+print("rxVoltages:	",rxVoltwarn[2],rxVoltwarn[3])
+
+local txVoltwarn= {99,7.5,7.4}
+
+
+--[[
+local bmp_rec = {
+				{lcd.loadBitmap("/scripts/libUnow/bmp/X18/Ant_ok.png")},
+				{lcd.loadBitmap("/scripts/libUnow/bmp/X18/Ant_warn.png")},
+				{lcd.loadBitmap("/scripts/libUnow/bmp/X18/Ant_alarm.png") },
+		}
+	
+local bmp_RecOK 	= lcd.loadBitmap("/scripts/libUnow/bmp/X18/Ant_ok.png")
+local bmp_RecWarn 	= lcd.loadBitmap("/scripts/libUnow/bmp/X18/Ant_warn.png")
+local bmp_RecAlarm 	= lcd.loadBitmap("/scripts/libUnow/bmp/X18/Ant_alarm.png") 
+--]]	
 
 -- **************************************************************************************
 -- *****                   several top bar widgets                         **************
@@ -43,80 +73,90 @@ function soundAlarm()
 end
 
 
-function displayTeleTop(sensor,x,y,frameX,theme)					-- display telemetry values; sizing in standard 2x4 arrangement (2 cols / 4 rows)
+function paintTopBG(frameX,theme)
+	-- load background pattern
+	if topBackground == nil then
+		if theme.c_textStd == lcd.RGB(255, 255, 255) then					
+			topBackground = lcd.loadBitmap("/scripts/libUnow/bmp/topback1.png") 	-- theme "dark"
+		else
+			topBackground = lcd.loadBitmap("/scripts/libUnow/bmp/topbackBright.png") 	-- theme "bright"
+		end
+	end
+
+	-- draw 
+	local scale = 1.3
+	local loops = 12
+	local step = 100/(loops+1)
+	for i=0,loops do
+		frame.drawBitmap(i*step,  0,  topBackground,  step*scale,  100*scale,  frameX)
+	end
+
+
+end
+
+
+
+function displayTeleTop(value,decimals,x,y,frameX,theme)					-- display telemetry values; sizing in standard 2x4 arrangement (2 cols / 4 rows)
 
 	lcd.color(theme.c_textStd)
-	local value, valueStrg
-	
--- ***************************   exception handling **********************************************
-	
---	if sensor.xh == false then										-- exception handler ?
-		if demoMode == true then									-- demo mode ?
-			--if debug7 then print("demoMode print TestVala") end
-			value = sensor.testVal
-		else
-			value = sensor.val
-		end	
 
-		valueStrg = string.format("%." .. sensor.dec .. "f",value)		-- format decimals								
+
+		valueStrg = string.format("%." .. decimals .. "f",value)		-- format decimals								
 		frame.drawText(x, y,  valueStrg, RIGHT ,  frameX)				-- print value
 --	end
 end
 
 
 
-function displayTeleBMP(sensor,x,y,iconsize,frameX,theme)					-- display telemetry values; sizing in standard 2x4 arrangement (2 cols / 4 rows)
+function displayTeleBMP(sensor,x,y,iconsize,frameX,theme,icon)					-- display telemetry values; sizing in standard 2x4 arrangement (2 cols / 4 rows)
 	--print("disp icon x y w h:",x,y, iconsize.width,  iconsize.height)
-	frame.drawBitmap(x,  y,  sensor.bmp,  iconsize.width,  iconsize.height,  frameX)
-	
+
+	if icon == nil then																				-- use std sensor bitmap
+		frame.drawBitmap(x,  y,  sensor.bmp,  iconsize.width,  iconsize.height,  frameX)
+
+		else																							-- use alternate bitmap
+--		if sensors.name == "RSSI" then
+			frame.drawBitmap(x,  y,  icon,  iconsize.width,  iconsize.height,  frameX)
+--		end
+	end
 	--print("BMP",sensor.name,x,y,iconsize.width,iconsize.width,frameX.x,frameX.y,frameX.w,frameX.h)
 	
 end
 
 
+
+
 -- **************************************************************************************
 -- *************************      top bar   widgets      ********************************
 -- **************************************************************************************
 
-
-
--- ***********   					receiver strength
-
-function top_RecStrenght(xx,Y1,Y2,Yoffset, frameX,theme,iconsize)
-	local televal = "rssi"
-	local yTxt1, yTxt2 
-	yTxt1 = Yoffset+Y1+(Y2-Y1)/255
-	yTxt2 = Yoffset+Y2+4+(Y2-Y1)/255
---	local col_Value = lcd.RGB(255, 255, 255)
-	lcd.color(theme.c_textStd)
-	
-	lcd.font(txtSize.big)
-	displayTeleTop(sensors["VFR"],xx+3, 		Y1 , frameX,theme, dy)
---	displayTeleTop(sensors["VFR"],xx+3, 	yTxt1 , frameX,theme, dy)
-	--displayTeleBMP(sensors["rssi"],xx+4, 	Y1 + Yoffset, iconsize, frameX)
-	displayTeleTop(sensors["rssi"],xx+15, 	Y1 , frameX,theme, dy)
---	displayTeleTop(sensors["rssi"],xx+15, yTxt2 , frameX,theme, dy)
-	displayTeleBMP(sensors["RxBt"],xx+1, 	Yoffset, iconsize, frameX,theme)
-	
-	
-	lcd.color(theme.c_textgrey1)
-	lcd.font(txtSize.Xsml)
-	frame.drawText(xx +2, 		87,  "VFR", RIGHT ,  frameX)
-	frame.drawText(xx +14, 		87,  "RSSI", RIGHT ,  frameX)	
-	
-	
+-- helper: determine warn level
+local function statusRec(vfrVal,rssiVal)
+	local status
+	if vfrVal < 50 or rssiVal < 45 then
+		status = ALARM
+	elseif vfrVal < 70 or rssiVal < 65 then
+		status = WARNING		
+	else
+		status = OK
+	end
+	return status
 end
 
-
--- **************************************************************************************
--- *************************      top bar   widgets      ********************************
--- **************************************************************************************
-
-
+-- helper: get telemetry or simulated value
+function getTopValue(sensor)
+	local value
+	if demoMode == true then									-- demo mode ?
+			value = sensor.testVal
+	else
+			value = getTele(sensor.name)
+	end	
+	return value
+end
 
 -- ***********   					receiver strength
 
-function top_RecStrenght2(xx,Y1,Y2,Yoffset, frameX,theme,iconsize,sensors,dispType)
+function top_RecStrenght2(xx,Y1,Y2,Yoffset, frameX,theme,iconsize,sensors,isVFR,dispType)
 	local televal = "rssi"
 	local yTxt1, yTxt2 
 	yTxt1 = Yoffset+Y1+(Y2-Y1)/255
@@ -127,8 +167,7 @@ function top_RecStrenght2(xx,Y1,Y2,Yoffset, frameX,theme,iconsize,sensors,dispTy
 	local offsRSSI = 15
 	
 	local trim = {}
---	local col_Value = lcd.RGB(255, 255, 255)
---	print("95 libTop",sensors["rssi"].name)
+
 	if dispType == "x20" then
 		trim ={
 			vfr 	=    2,
@@ -138,28 +177,35 @@ function top_RecStrenght2(xx,Y1,Y2,Yoffset, frameX,theme,iconsize,sensors,dispTy
 		}
 	else
 		trim ={
-			vfr 	=   2,
-			bmp 	=  0.8,
+			vfr 	=   4,
+			bmp 	=  2,
 			rssi 	=  18,
 			yDelta 	=   8,
 		}
 	
 	end
 	
+	local vfrVal 	= getTele(sensors["VFR"].name)
+	local rssiVal	= getTele(sensors["rssi"].name)
+	
+	if rssiVal > 99 then rssiVal = 99 end								-- format 2 digits
+
+--	vfrVal 	= 50	+(system.getSource({category=CATEGORY_ANALOG, name="Rudder",  }):value())/1024	*50
+--	rssiVal = 50	+(system.getSource({category=CATEGORY_ANALOG, name="Aileron", }):value())/1024	*50
+	
+	
 	lcd.color(theme.c_textStd)
 	lcd.font(txtSize.big)
 
-	displayTeleTop(sensors["VFR"], xx+trim.vfr, 	Y1 , frameX,theme, dy)					-- VFR Value
-	displayTeleBMP(sensors["rssi"],xx+trim.bmp, 	Y1 + Yoffset, iconsize, frameX)
-	displayTeleTop(sensors["rssi"],xx+trim.rssi, 	Y1 , frameX,theme, dy)
---	displayTeleTop(sensors["rssi"],xx+15, yTxt2 , frameX,theme, dy)
 
---	displayTeleBMP(sensors["RxBt"],xx+offsBMP, 	Yoffset, iconsize, frameX,theme)
-	
+	if isVFR then displayTeleTop(vfrVal,0, xx+trim.vfr, 	Y1 , frameX,theme, dy)	end				-- VFR Value
+	displayTeleBMP(sensors["rssi"],xx+trim.bmp, 	Y1 + Yoffset, iconsize, frameX,theme,bmp_rec[statusRec(vfrVal,rssiVal)])
+	displayTeleTop(rssiVal,0,xx+trim.rssi, 	Y1 , frameX,theme, dy)
+
 	
 	lcd.color(theme.c_textgrey1)
 	lcd.font(txtSize.Xsml)
-	frame.drawText(xx +trim.vfr  -1, 		87 + trim.yDelta,  "VFR", RIGHT ,  frameX)
+	if isVFR then frame.drawText(xx +trim.vfr  -1, 		87 + trim.yDelta,  "VFR", RIGHT ,  frameX) end
 	frame.drawText(xx +trim.rssi -1, 		87 + trim.yDelta,  "RSSI", RIGHT ,  frameX)	
 	
 	
@@ -177,7 +223,6 @@ end
 
 
 -- ***********   					ls stati
--- called by 	top_status(xx,Y1,Y2,Yoffset, frameX, "ls10","ls11", "Flaperon","snapflap")
 
 function top_status(xx,Y1,Y2,Yoffset, frameX,theme, layout, lsTop, lsBot,  lsTopLabel, lsBotLabel)
 	local status1,status2
@@ -193,20 +238,7 @@ function top_status(xx,Y1,Y2,Yoffset, frameX,theme, layout, lsTop, lsBot,  lsTop
 		yTxt1 = Yoffset+rectHeight*0.03			-- yPos 1
 		yTxt2 = Yoffset+Y2+rectHeight*0.03		-- yPos 2
 
-		--local status1,status2
 
-
-		--if lsTop ~= nil then																				
-			--local lsNumTop = tonumber(string.sub(lsTop,3,6))
-			--local lsNumBot = tonumber(string.sub(lsBot,3,6))
-		--	status1	= lsTop:value()
-		--	status2	= lsBot:value()	
-		--else																								-- use lsw name
-		--	status1	= system.getSource({category=CATEGORY_LOGIC_SWITCH, name="flaperon"}):value()
-		--	status2	= system.getSource({category=CATEGORY_LOGIC_SWITCH, name="snapflp"}):value()
-		
-	--	end
-		-- colors, status dependent:
 		
 		color1 			= theme.c_indOn
 		color1Txt		= theme.c_textindOn
@@ -222,9 +254,8 @@ function top_status(xx,Y1,Y2,Yoffset, frameX,theme, layout, lsTop, lsBot,  lsTop
 		frame.drawText(	xTxt, yTxt1,   lsTopLabel,  CENTERED,  frameX)
 		
 		color,colorTxt = getColor(status2,theme)
-		--colortmp = theme.c_indOff
+
 		lcd.color(color)
-		--frame.drawFilledRectangleRnd(xx,Yoffset+Y2,layout.width01,Yoffset+Y2-Y1-10, frameX,8)
 		frame.drawFilledRectangleRnd(xx,Yoffset+Y2,layout.width01,rectHeight, frameX,8)
 		
 		lcd.color(colorTxt)
@@ -239,20 +270,33 @@ function top_status(xx,Y1,Y2,Yoffset, frameX,theme, layout, lsTop, lsBot,  lsTop
 end
 
 
+
+
+
+
 -- ***********   					name
-
-
 function top_text(xx,Y1,Yoffset, frameX,theme, layout, text,col)
 
 	lcd.color(col)
-	lcd.font(txtSize.sml)
-	lcd.font( FONT_BOLD)
+	lcd.font(txtSize.std)
+--	lcd.font( FONT_BOLD)
+
+	yTxt = Yoffset+Y1
+
+	frame.drawText(	xx, yTxt,  text, CENTERED ,  frameX)
+end
+
+
+
+-- ***********   					name (topLight)
+function top_text2(xx,Y1,Yoffset, frameX,theme, layout, text,col)
+
+	lcd.color(col)
+	lcd.font(txtSize.big)
 	
 	yTxt = Yoffset+Y1
-	frame.drawText(	xx, yTxt,  text, LEFT ,  frameX)
-	
 
-
+	frame.drawText(	xx, yTxt,  text, CENTERED ,  frameX)
 end
 
 
@@ -271,14 +315,21 @@ end
 
 -- ***********   					show safety switch status
 
-function top_safety(xx,Y1,Yoffset, frameX,theme,layout,appTxt,	lsMotSafe,lsMotRunning,	param)
-		local condSafe		=  false
-		local condRunning	=  false
+function top_safety(xx,Y1,Yoffset, frameX,theme,layout,appTxt,	lsMotSafe,lsMotPreArmed,lsMotRunning,	param)
+	local condSafe		=  false
+	local condRunning	=  false
+	local condPreArmed	=  false
 		
-	if pcall(function() condRunning=(lsMotRunning:value() >0)   condSafe=(lsMotSafe:value()>0) end ) then
+	
+		
+	if pcall(function() 
+						condRunning=(lsMotRunning:value() >0)   
+						condPreArmed=(lsMotPreArmed:value() >0)   
+						condSafe=(lsMotSafe:value()>0) 
+			end ) then
+			
 		local condArmed 	=  false
 		local condAlarm		=  false
-
 		
 		local safety,engineStatus
 		
@@ -303,10 +354,7 @@ function top_safety(xx,Y1,Yoffset, frameX,theme,layout,appTxt,	lsMotSafe,lsMotRu
 	--	condRunning		= (lsMotRunning:value() >0)								-- eval if motor input will deliver "run" status
 	--	condSafe 		= (lsMotSafe:value()	>0) and not(condRunning)		-- eval if safety/kill switch is active & "disconnects" any motor inputs
 		condArmed		= not(condSafe) 			and not(condRunning)		-- eval if safety switch is inactive but no motor input recognized
-		condAlarm		= condSafe 					and condRunning				-- eval if tx outputs "motor: run", only rx switched off state prevents engine from start
-
-
-		
+		condAlarm		= condSafe 					and condPreArmed				-- eval if tx outputs "motor: run", only rx switched off state prevents engine from start
 
 		
 		local xTxt = xx+layout.width02/2			-- y centerline
@@ -349,8 +397,8 @@ function top_safety(xx,Y1,Yoffset, frameX,theme,layout,appTxt,	lsMotSafe,lsMotRu
 			colortmp = colorT[colIndex+1]	
 			lcd.color(colortmp)
 			lcd.font(fontButtonSize)
-			frame.drawText(	xTxt, yTxt1,  appTxt.motorOn[lan], CENTERED ,  frameX)
-
+		--	frame.drawText(	xTxt, yTxt2,  appTxt.motorON[lan], CENTERED ,  frameX)
+			frame.drawText(	xTxt, yTxt2,  appTxt.motorPreArmed[lan], CENTERED  ,  frameX)
 
 			 
 		elseif condArmed then
@@ -388,43 +436,10 @@ end
 
 -- ***********   					Tx/Rx Voltage (vertical Bat)
 
-function top_BatV(xx,Y1,Y2,Yoffset, frameX,theme, txMin, txMax, txVal, rxMin, rxMax, rxVal)
+--function top_BatV2(xx,Y1,Y2,Yoffset, frameX,theme, txMin, txMax, txVal, rxMin, rxMax, rxVal,dispType)
+function top_BatV2(xx,Y1,Y2,Yoffset, frameX,theme,txVal,rxVal,dispType)
 	local col_txt = lcd.RGB(120, 120, 120)
-	if txVal > txMax then txVal= txMax end
-	lcd.font(txtSize.sml)
--- TX
-	lcd.color(theme.c_textStd)
-	displayTeleTop(sensors["TxBt"],	xx+2.9, Y1 , frameX,theme)						-- PRINT VALUE
-	lcd.color(theme.c_textgrey1)
-	lcd.font(txtSize.sml)
-	frame.drawText(					xx-0.7, Y2+5,   txt_.Tx, LEFT ,  frameX)			-- print LABEL
-	--draw vertical Bat symbol (PosX, PosY, width (%), height (%), tickness lines, frame,  minV, maxV, value)
-	drawBat_V(xx+ 0.5,5,4,95,2,frameX,txMin,txMax,txVal)
-	--drawBat_V2(xx+5,Yoffset+1,4,95,2,frameX,txMin,txMax,txVal)
-
--- RX	
-	if rxVal > rxMax then rxVal= rxMax end
-	lcd.font(txtSize.sml)
-	lcd.color(theme.c_textStd)	
-	displayTeleTop(sensors["RxBt"],	xx+15.4, 	Y1 , frameX,theme)
-	lcd.color(theme.c_textgrey1)	
-	lcd.font(txtSize.sml)
-	--frame.drawText(					xx+17.5, 	Y2,  " Rx", RIGHT ,  frameX)
-	frame.drawText(					xx+14.8 ,	Y2+5,  txt_.Rx, RIGHT ,  frameX)
-	drawBat_V(xx+4.3,5,4,95,2,frameX,rxMin,rxMax,rxVal)
-	--drawBat_V2(xx+9.5,Yoffset+1,4,95,2,frameX,rxMin,rxMax,rxVal)
-	
-end
-
-
-
-
-
--- ***********   					Tx/Rx Voltage (vertical Bat)
-
-function top_BatV2(xx,Y1,Y2,Yoffset, frameX,theme, txMin, txMax, txVal, rxMin, rxMax, rxVal,dispType)
-	local col_txt = lcd.RGB(120, 120, 120)
-	if txVal > txMax then txVal= txMax end
+--	if txVal > txMax then txVal= txMax end
 	lcd.font(txtSize.sml)
 	
 	local batWid = 6
@@ -446,29 +461,32 @@ function top_BatV2(xx,Y1,Y2,Yoffset, frameX,theme, txMin, txMax, txVal, rxMin, r
 		}
 	
 	end
---sensors = defineSensors(widget)
+	
+--	 txVal = 8+(system.getSource({category=CATEGORY_ANALOG, name="Throttle", }):value())/1024
+--	 rxVal = 5.2+(system.getSource({category=CATEGORY_ANALOG, name="Elevator", }):value())/2048
+
 -- TX
 	lcd.color(theme.c_textStd)
-	displayTeleTop(sensors["TxBt"],	xx+2.9, 		Y1+trim.yOff , frameX,theme)			-- PRINT VALUE
+	displayTeleTop(txVal,1,	xx+2.9, 		Y1+trim.yOff , frameX,theme)			-- PRINT VALUE
 	
 	lcd.color(theme.c_textgrey1)
 	lcd.font(txtSize.sml)	
 	frame.drawText(		xx+offsTx, 				Y2+trim.yOff+trim.yDelta,   "Tx", LEFT ,  frameX)			-- print LABEL
-	drawBat_V(			xx+ 2.5,				5+trim.yOff,		batWid,bathgt,2,frameX,txMin,txMax,txVal)
+	drawBat_V(			xx+ 2.5,				5+trim.yOff,		batWid,bathgt,2,frameX,txVal,txVoltwarn)
 	
 	--draw vertical Bat symbol (PosX, PosY, width (%), height (%), tickness lines, frame,  minV, maxV, value)
 	--drawBat_V2(xx+5,Yoffset+1,4,95,2,frameX,txMin,txMax,txVal)
 
 -- RX	
-	if rxVal > rxMax then rxVal= rxMax end
+--	if rxVal > rxMax then rxVal= rxMax end
 	lcd.font(txtSize.sml)
 	lcd.color(theme.c_textStd)	
-	displayTeleTop(sensors["RxBt"],	xx+offsRx, 	Y1 +trim.yOff, frameX,theme)				-- PRINT VALUE
+	displayTeleTop(rxVal,1,	xx+offsRx, 	Y1 +trim.yOff, frameX,theme)				-- PRINT VALUE
 	
 	lcd.color(theme.c_textgrey1)	
 	lcd.font(txtSize.sml)
 	frame.drawText(		xx+15+trim.xTxt1, 	Y2+trim.yOff+trim.yDelta,  	" Rx", RIGHT ,  frameX)
-	drawBat_V(			xx+6.5,					5+trim.yOff,		batWid,bathgt,2,frameX,rxMin,rxMax,rxVal)
+	drawBat_V(			xx+6.5,					5+trim.yOff,		batWid,bathgt,2,frameX,rxVal,rxVoltwarn)
 	 
 	 
 --	frame.drawText(					xx+14.8 ,	Y2+5,  txt_.Rx, RIGHT ,  frameX)
@@ -495,11 +513,11 @@ function top_BatH(xx,Y1,Y2,Yoffset, frameX,theme, txMin, txMax, txVal, rxMin, rx
 	frame.drawText(xx+0, 	Y1,  "Tx:", RIGHT ,  frameX)	
 	frame.drawText(xx+12, 	Y1,  "Rx:", RIGHT ,  frameX)
 
-	displayTeleTop(sensors["TxBt"],xx+6, 		Y1, frameX,theme)
+	displayTeleTop(txVal,1,xx+6, 		Y1, frameX,theme)
 	drawBat_H(xx-3,Y2,batlength,50,2,frameX,txMin, txMax, txVal)
 	
 
-	displayTeleTop(sensors["RxBt"],xx+16, 	Y1, frameX,theme)	
+	displayTeleTop(rxVal,1,xx+16, 	Y1, frameX,theme)	
 	drawBat_H(xx+8,Y2,batlength,50,2,frameX,rxMin, rxMax, rxVal)
 
 end

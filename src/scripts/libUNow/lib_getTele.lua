@@ -51,7 +51,13 @@ function getTeleValues()
 end
 
 function getTele(TeleSensor,option)
-	local sensor = system.getSource({category=CATEGORY_TELEMETRY, name=TeleSensor, options=option} )
+	local sensor
+	if TeleSensor == "TxBt" then				-- tx voltage is other category !
+		sensor = system.getSource({category=CATEGORY_SYSTEM, member=MAIN_VOLTAGE})
+	else
+		sensor = system.getSource({category=CATEGORY_TELEMETRY, name=TeleSensor, options=option} )
+	end
+	
 	if sensor ~= nil then
 		val = sensor:value()
 		return val

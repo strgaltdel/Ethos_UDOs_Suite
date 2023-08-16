@@ -1710,7 +1710,9 @@ local function backGround(widget)
 
 	for i = 1, NumAPPS	do																					-- loop "slots"		(without TOPBAR)
 			local appUID = widget.conf[i+OFFSET + TOP_OFFSET][3]											-- get app UID in frame assignment
-			if appUID ~= APPidxNil and widget.widgetList[appUID].bgFunc ~= nil then							-- app was assigned and needs bg activities:										-- determine which apps are configured & call corresponding background tasks	
+			local check
+			pcall( function() check = (appUID ~= APPidxNil and widget.widgetList[appUID].bgFunc ~= nil) return end )
+			if check then							-- app was assigned and needs bg activities:										-- determine which apps are configured & call corresponding background tasks	
 				if widget.appConfigured[i] == false then
 					MF_frontendConfigure(widget,widget.appTxt[i])											-- if app not "first run configured" >> do
 							collectgarbage("collect")	

@@ -82,37 +82,21 @@ function suite1conf()
 		[w_DEMO] 		=	{label="Demo",		File="demo.lua", 			mainfunc="main_demo",		bgFunc = nil,			maxpage =1,	active = false,  txt = dofile(widgetPath.."gvar/lang.lua"),			index = w_GVAR},	
 
 		
-		[w_TopFull] 	=	{label="TopBar",	File="topfull.lua", 		mainfunc="topfull",			bgFunc = nil,			maxpage =1,	active = false,  txt = dofile(widgetPath.."topBar/lang.lua"),		index = w_TopFull},	
-		[w_TopStd] 		=	{label="TopStd",	File="topStandard.lua",		mainfunc="topstd",			bgFunc = nil,			maxpage =1,	active = false,  txt = dofile(widgetPath.."topBar/lang.lua"),		index = w_TopStd},	
-		[w_TopLight] 	=	{label="TopLight",	File="topLight.lua", 		mainfunc="toplight",		bgFunc = nil,			maxpage =1,	active = false,  txt = dofile(widgetPath.."topBar/lang.lua"),		index = w_TopLight},	
+		[w_TopFull] 	=	{label="TopBar",	File="topfull.lua", 		mainfunc="topfull",			bgFunc = nil,			maxpage =1,	active = false,  txt = dofile(widgetPath.."topFull/lang.lua"),		index = w_TopFull},	
+		[w_TopStd] 		=	{label="TopStd",	File="topStandard.lua",		mainfunc="topstd",			bgFunc = nil,			maxpage =1,	active = false,  txt = dofile(widgetPath.."topStandard/lang.lua"),	index = w_TopStd},	
+		[w_TopLight] 	=	{label="TopLight",	File="topLight.lua", 		mainfunc="toplight",		bgFunc = nil,			maxpage =1,	active = false,  txt = dofile(widgetPath.."topLight/lang.lua"),		index = w_TopLight},	
 
 		--[w_EMPTY] 	=	{label="EMPTY"}
 		[w_EMPTY] 		=	{label="EMPTY",		File="void99.lua", 			mainfunc="void",			bgFunc = nil,			maxpage =1,	active = false,  txt = {{"txt1","txt2"},{"txt3","txt4"}},			index = w_EMPTY}
 	}
 
--------------------------------------
-----   widget assignments  ----------
-----    "which is where"   ----------
-----    1=left   2=right   ----------
--------------------------------------
 
---[[
-	
-		[TOPLINE] 		=	widgetList[w_EMPTY],			-- topWidget
-	
-		[TOP_1] 		=	widgetList[w_SETCURVE],		-- left Frame
-		[CENTER_1] 	=	widgetList[w_MODELFIND],
-		[BOTTOM_1] 	=	widgetList[w_EMPTY],
-
-		[TOP_2]		=	widgetList[w_EMPTY],			-- right frame
-		[CENTER_2] 	=	widgetList[w_EMPTY],	
-		[BOTTOM_2] 	=	widgetList[w_EMPTY],	
-	
-
---]]
 
 	return widgetList
 end
+
+
+
 
 function defTopBarlist(input,search)
 
@@ -147,6 +131,8 @@ function defTopBarlist(input,search)
 	end
 
 end
+
+
 
 
 function defApplist(input,search,widget)
@@ -189,8 +175,7 @@ end
 
 
 function getSubForm(index,txt,lang)												-- only for apps, not used for topBars (no subform)
---print("getsubform called",index,lang)
---print("indizes:  2=pic  3=curve   4=mFind")
+
 --[[
 	local w_TOPa  			= 1			-- human readable format
 	local w_ANNOUNCE    	= 2
@@ -252,22 +237,28 @@ function getSubForm(index,txt,lang)												-- only for apps, not used for to
 			}
 	elseif index == w_TopFull  then
 		subFrm= {	
-			{"Status1, LSW:", 									"createLswChoice",		nil,	1,		{{dummy,1},},	default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="LS Flaperon"})	},																					-- testmode																				-- testmode
-			{"Status1, label",									"createTextField",		nil,	1,	 					default="flperon"	},											
-			{"Status2, LSW:", 									"createLswChoice",		nil,	1,		{{dummy,1},},	default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="LS Snapflap"})	},																						-- testmode
-			{"Status2, label",									"createTextField",		nil,	1,	 					default="snpflap"	},	
-			{"Motor Safety ..status \"SAFE\",LSW:",				"createLswChoice",		nil,	1,		{{dummy,1},},	default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="Sfty Mot disarm"})},																						-- testmode
-			{"               ..status \"WARN/pre-engaged\",LSW:","createLswChoice",		nil,	1,		{{dummy,1},},	default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="Mot Warning"})	},																						-- testmode
-			{"               ..status \"RUNNING\", LSW:",		"createLswChoice",		nil,	1,		{{dummy,1},},	default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="Motor running"})	},																						-- testmode
+			{txt.conf[1][lang], 	"createLswChoice",			nil,	1,		{{dummy,1},},	default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="LS Flaperon"})	},																					-- testmode																				-- testmode
+			{txt.conf[2][lang],		"createTextField",			nil,	1,	 					default="flperon"	},											
+			{txt.conf[3][lang], 	"createLswChoice",			nil,	1,		{{dummy,1},},	default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="LS Snapflap"})	},																						-- testmode
+			{txt.conf[4][lang],		"createTextField",			nil,	1,	 					default="snpflap"	},	
+			{txt.conf[5][lang],		"createBooleanField",		nil,	true,					default=true	},																					-- display VFR / access feature	
+			{txt.conf[6][lang],		"createLswChoice",			nil,	1,		{{dummy,1},},	default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="Safe Mot disarm"})},																						-- testmode
+			{txt.conf[7][lang],		"createLswChoice",			nil,	1,		{{dummy,1},},	default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="Mot Warning"})	},																						-- testmode
+			{txt.conf[8][lang],		"createLswChoice",			nil,	1,		{{dummy,1},},	default= system.getSource({category=CATEGORY_LOGIC_SWITCH, name ="Motor running"})	},																						-- testmode
 			
 
 			}
 	elseif index == w_TopStd  then
 		subFrm= {	
-			{"TimerA select", 		 						"createChoiceField",		nil,	1,	 	{{"Timer 1",1},{"Timer 2",2},{"Timer3",3}},	default=1			},																					-- testmode
-			{"TimerA, label (max 4Chars)",					"createTextField",			nil,	1,	 												default="Flgt"		},	
-			{"TimerB select", 		 						"createChoiceField",		nil,	1,	 	{{"Timer 1",1},{"Timer 2",2},{"Timer3",3}},	default=2			},				
-			{"TimerB, label (max 4Chars)",					"createTextField",			nil,	1,	 												default="Mot"		},	
+			{txt.conf[1][lang], 	"createChoiceField",		nil,	1,	 	{{"Timer 1",1},{"Timer 2",2},{"Timer3",3}},	default=1			},																					-- testmode
+			{txt.conf[2][lang],		"createTextField",			nil,	1,	 												default="Flgt"		},	
+			{txt.conf[3][lang], 	"createChoiceField",		nil,	1,	 	{{"Timer 1",1},{"Timer 2",2},{"Timer3",3}},	default=2			},				
+			{txt.conf[4][lang],		"createTextField",			nil,	1,	 												default="Mot"		},	
+			{txt.conf[5][lang],		"createBooleanField",		nil,	true,					default=true	},																					-- display VFR / access feature	
+			}
+	elseif index == w_TopLight  then
+		subFrm= {	
+			{txt.conf[1][lang],		"createBooleanField",		nil,	true,					default=true	},																					-- display VFR / access feature	
 			}
 	else
 		subFrm= {nil,"dummy",nil,nil,nil,nil}																																	-- no subforms
@@ -299,7 +290,7 @@ function defineSuite_Layout(display)
 		["topX1"] 		= 	01,					-- x-coordinates for TopBar sub-widgets (percent of displ width)
 		["topX2"] 		= 	18,
 		["topX3"] 		= 	28,
-		["topX4"] 		= 	40,						-- name
+		["topX4"] 		= 	43,						-- name
 		["topX5"] 		= 	50,						-- bat
 		["topX6"]		= 	70,						-- vfr
 		
@@ -324,8 +315,8 @@ function defineSuite_Layout(display)
 		["topX1"] 		= 	00,					-- x-coordinates for TopBar sub-widgets (percent of displ width)
 		["topX2"] 		= 	15,
 		["topX3"] 		= 	29,
-		["topX4"] 		= 	35,					-- name
-		["topX5"]		= 	56,					-- batt
+		["topX4"] 		= 	40,					-- name
+		["topX5"]		= 	54,					-- batt
 		["topX6"]		= 	82,					-- rssi
 		
 		-- button specific
@@ -410,5 +401,34 @@ function getFrameSizing(WIDGET_MODE,TOPBAR_WID,Dual_WID)
 	end
 
 	return topBarHeight, blank, widgetHeight, widgetWidth
+end
+
+
+
+function defineRxVoltThresholds(name)
+	local rxThres = {}
+	local hvBec = {"Thor","Ventus"}
+	local div 	= {"ASH26","Ventus","Discus"}
+	
+	-- warning/alarm voltage thresholds for std HVbec 
+	for i = 1,#hvBec do
+		if hvBec[i] == name then
+			rxThres = {99,6.2,6.0}					-- okMax,warning, alarm
+			return rxThres
+		end
+	end
+	
+		-- warning/alarm voltage thresholds for group "div" 
+	for i = 1,#div do
+		if div[i] == name then
+			rxThres = {99,7.2,7.0}					-- okMax,warning, alarm
+			return rxThres
+		end
+	end
+		
+		-- warning/alarm voltage thresholds for group "standard" / 4 cell nimh etc.. 
+
+	rxThres = {99,5.1,4.9}					-- okMax,warning, alarm
+	return rxThres
 end
 

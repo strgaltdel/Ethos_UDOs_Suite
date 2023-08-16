@@ -119,6 +119,7 @@ function initTheme(choice)
 		
 		}
 	
+		topBackground = nil								-- reset topbar background bmp
 
 	return (themeTemplate[choice])
 
