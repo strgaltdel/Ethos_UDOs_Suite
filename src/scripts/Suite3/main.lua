@@ -160,11 +160,10 @@
  local Dual_WID <const>		 = 2
  local TOPBAR_WID <const>	 = 3
 												-- defines global "management" mode of this "wrapper":
- --local WIDGET_MODE <const>	 = Dual_WID
- local WIDGET_MODE <const>	 = TOPBAR_WID
-											--		1 = single frame (e.g. half area of the screen)
-											--		2 = two frames within one ethos widget, e.g. fullscreen with/without TOPLINE
-											--		3 = two frames AND an individual topline , Ethos 100% fullscreen  
+ --local WIDGET_MODE <const>	 = SINGLE_WID	--		1 = single frame (e.g. half area of the screen)
+ --local WIDGET_MODE <const>	 = Dual_WID		--		2 = two frames within one ethos widget, e.g. fullscreen with/without TOPLINE
+ local WIDGET_MODE <const>	 = TOPBAR_WID		--		3 = two frames AND an individual topline , Ethos 100% fullscreen  
+											
   
   
  local KEY 					= ""			-- Mode dependent Widget key (used by init)
@@ -1709,7 +1708,7 @@ end
 local function backGround(widget)
 
 	for i = 1, NumAPPS	do																					-- loop "slots"		(without TOPBAR)
-			local appUID = widget.conf[i+OFFSET + TOP_OFFSET][3]											-- get app UID in frame assignment
+			pcall( function() local appUID = widget.conf[i+OFFSET + TOP_OFFSET][3] return end )												-- get app UID in frame assignment
 			local check
 			pcall( function() check = (appUID ~= APPidxNil and widget.widgetList[appUID].bgFunc ~= nil) return end )
 			if check then							-- app was assigned and needs bg activities:										-- determine which apps are configured & call corresponding background tasks	
