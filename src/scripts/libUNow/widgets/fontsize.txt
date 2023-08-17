@@ -1,0 +1,45 @@
+currently working on a redesign of some of my widgets,
+and so grew an idea:
+
+(1)
+regarding UI / font sizing in menues:
+My experience is, that users , after a few days working on a new UI, tend to know what buttom / field / area triggers what functionality or requires what kind of parameter without the need of reading the explaining text.
+so i wouldn't bother to redesign this area. 
+
+(2)
+regarding display of informational data, i guess there could be an relatively "easy" way to get more usable space on a x18 display
+looking on the standard layout, you see about 20..25% percent is used 
+  - (I) for the "page indication" line (points indicate the number of available screens) and the 
+  - (I) touch area at the bottom offering icons to jump into the menu tree
+  
+
+The indication line could be replaced by info in the topbar  (a text like 1/(3) ;indicates screen  #1 out of three available)
+
+maybe it's my personal muscle memory, but i never used the bottom icons to jump into the menues, the hardkeys are my favorite "navigation tools" 
+But i've to admit, this is a very personal decision and i can't judge about the majority of the users
+
+
+so this is the proposal:
+
+add an entry in models config, so that the user can decide if he want this "touch screen" supporting elements or not.
+
+if user decides "no" in order to get more "free" area, you can add 2..3 widget frame sets which use this freed area (in case widget frame size is not dynamically calculated in existing sets)
+
+So widgets can use more area for bigger fonts or not so compressed info areas
+
+
+as an example i'll attach a screenshot of a prototype on a x18 sim-screen.
+the left widget is the same, 
+using identical font & icon size,
+but spread linear over a bigger area which supports better readability (yellow frame). 
+
+even without larger fonts it seems to be better readable,
+the "classic" widget suffers a bit from the dense display 
+
+BUT
+if it can't be done with little effort
+I would give priority to other themes
+
+(just my 2 cents)
+ 
+  
