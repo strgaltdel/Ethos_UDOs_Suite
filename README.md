@@ -18,7 +18,7 @@ August 2023
 
 
 
-![3in1 title](https://github.com/strgaltdel/Ethos_UDOs_Suite/blob/Beta-0.8/doc/suite.png)
+![3in1 title](https://github.com/strgaltdel/Ethos_UDOs_Suite/blob/main/doc/suite.png)
 
 
 
@@ -33,14 +33,13 @@ Furthermore, each app can support multiple pages, which can also be scrolled thr
 
 
 
-![3in1 title](https://github.com/strgaltdel/Ethos_UDOs_Suite/blob/Beta-0.8/doc/nav.png)
-
+![3in1 title](https://github.com/strgaltdel/Ethos_UDOs_Suite/blob/main/doc/nav.png)
 The wrapper exists in several variants (1,2,3), so that a single frame, two frames, or even two frames (each with three apps) and a TopBar can be used.
 
 
 
 
-![3in1 title](https://github.com/strgaltdel/Ethos_UDOs_Suite/blob/Beta-0.8/doc/total.png)
+![3in1 title](https://github.com/strgaltdel/Ethos_UDOs_Suite/blob/main/doc/total.png)
 Topbars can be generated individually by Lua developers, three examples are included
 
 
