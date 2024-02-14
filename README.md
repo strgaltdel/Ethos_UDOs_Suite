@@ -8,7 +8,13 @@ not for productive use
 
 tests only
 
-Feb 2024
+
+
+0.85 "performance beta"
+
+- precalc of coordinates & invalidate areas on start
+- topwidget class
+- more local funcs & vars
 
 
 
@@ -58,11 +64,7 @@ tested under Ethos 1.4.15
 
 
 
-0.85 "performance beta"
 
-- precalc of coordinates & invalidate areas on start
-- topwidget class
-- more locl funcs & vars
 
 
   
