@@ -2,13 +2,13 @@
 
 for Ethos Tandem Transmitters
 
-BETA 0.81
+BETA 0.85
 
 not for productive use
 
 tests only
 
-August 2023
+Feb 2024
 
 
 
@@ -49,31 +49,22 @@ Topbars can be generated individually by Lua developers, three examples are incl
 
 ### Compatibility
 
-tested under Ethos 1.4.8
+tested under Ethos 1.4.15
 
   * Tandem X18
 
-(should work on all Tandem transmitters)
+(current development, has to be adopted to other screens)
 
 
 
 
+0.85 "performance beta"
+
+- precalc of coordinates & invalidate areas on start
+- topwidget class
+- more locl funcs & vars
 
 
-
-
-### functionality / apps
-
-  * a telemetry app, which can display sensor values on three different pages
-  * an inflight curve editor
-  * modelfind, an app which creates a 2D barcode including last known GPS coordinates (goole maps)
-  * model image, you can choose between different backgrounds, two timer values are presented optional
-  * "under construction": an app to trim multiple GVARS inflight
-  * three different topbars
-
-  * all apps are configurable via "config Menu"
-  * individual customizing via files
-  * multi language support
   
 
 video
