@@ -1,4 +1,4 @@
-#                                           UDOs Suite (BETA 0.8)
+#                                           UDOs Suite (BETA 0.8), Ethos lua widget
 
 for Ethos Tandem Transmitters
 
